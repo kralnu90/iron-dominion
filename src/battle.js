@@ -241,6 +241,7 @@ const Battle = {
       else if (id === 'oath') { u.oath = false; toast(`${UD(u).n} renews its Oath of Iron`); }
       else if (id === 'rapid') { u.rapid = true; toast(`${UD(u).n} can charge this turn`); }
       else if (id === 'surge') { u.surge = true; toast(`${UD(u).n}: +2 to its charge roll`); }
+      else if (id === 'overc') { u.overc = true; toast(`${UD(u).n} re-rolls failed wounds this phase`); }
     }
     this.render();
   },
@@ -305,7 +306,7 @@ const Battle = {
         if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
         else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
-      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
+      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : '') + (!u.overc && canGamb(s, 'overc') ? B('g_overc', '⚡ Overcharge · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.fellBack ? "Can't shoot after falling back." : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
       else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold') + (!u.surge && canGamb(s, 'surge') ? B('g_surge', '⚙ Scrap Surge · 1 CP', 'gmb') : ''); else if (u.advanced && !u.rapid && !u.charged && !engaged(u) && !u.fellBack && chargeTargets(u).length && canGamb(s, 'rapid')) { act = B('g_rapid', '⇶ Rapid Assault · 1 CP', 'gmb'); hint = 'This unit advanced. Rapid Assault lets it charge anyway.'; } else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;
     const next = { move: 'End movement →', shoot: 'End shooting →', charge: 'End charges → Fight' }[G.phase];

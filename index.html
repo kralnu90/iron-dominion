@@ -161,7 +161,7 @@ body.in-battle{overflow-x:hidden}
    IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
    Distances are in inches; the board is a grid of 2" squares.
    ============================================================================ */
-const GAME_VERSION = '0.3.0';
+const GAME_VERSION = '0.3.1';
 const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
 
 /* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
@@ -201,7 +201,26 @@ const WEAPONS = {
   spikeLauncher: { n: 'Spike launcher', r: 24, A: 1, sk: 5, S: 9, AP: -2, D: 'D3', kw: {} },
   flameBelcher: { n: 'Flame belcher', r: 12, A: '2D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1 } },
   sparkWelder: { n: 'Spark welder', r: 12, A: 'D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1, pistol: 1 } },
-  bigWrench:   { n: 'Big wrench', r: 0, A: 3, sk: 3, S: 7, AP: -1, D: 2, kw: {} }
+  bigWrench:   { n: 'Big wrench', r: 0, A: 3, sk: 3, S: 7, AP: -1, D: 2, kw: {} },
+  /* the Auric Concord */
+  lumenRifle:  { n: 'Lumen rifle', r: 30, A: 1, sk: 4, S: 5, AP: 0, D: 1, kw: { rapid: 1 } },
+  lumenCarbine: { n: 'Lumen carbine', r: 18, A: 2, sk: 3, S: 5, AP: -1, D: 1, kw: { assault: 1 } },
+  lumenPistol: { n: 'Lumen pistol', r: 12, A: 1, sk: 4, S: 5, AP: 0, D: 1, kw: { pistol: 1 } },
+  seekerLauncher: { n: 'Seeker launcher', r: 36, A: 1, sk: 4, S: 8, AP: -2, D: 'D3', kw: { heavy: 1 } },
+  gildedBlade: { n: 'Gilded blade', r: 0, A: 3, sk: 3, S: 4, AP: -1, D: 1, kw: {} },
+  shockBaton:  { n: 'Shock baton', r: 0, A: 2, sk: 4, S: 4, AP: 0, D: 1, kw: {} },
+  rifleStock:  { n: 'Rifle stock', r: 0, A: 1, sk: 5, S: 3, AP: 0, D: 1, kw: {} },
+  longshot:    { n: 'Longshot rifle', r: 36, A: 1, sk: 3, S: 5, AP: -1, D: 2, kw: { heavy: 1 } },
+  huntKnife:   { n: 'Hunting knife', r: 0, A: 1, sk: 4, S: 3, AP: 0, D: 1, kw: {} },
+  droneRepeater: { n: 'Drone repeater', r: 24, A: 2, sk: 4, S: 5, AP: 0, D: 1, kw: { twin: 1 } },
+  droneRam:    { n: 'Drone ram', r: 0, A: 1, sk: 5, S: 3, AP: 0, D: 1, kw: {} },
+  ionRepeater: { n: 'Ion repeater', r: 24, A: 3, sk: 4, S: 6, AP: -1, D: 2, kw: {} },
+  scorchEmitter: { n: 'Scorch emitter', r: 12, A: 'D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1 } },
+  lanceProjector: { n: 'Lance projector', r: 18, A: 1, sk: 4, S: 9, AP: -4, D: 'D6', kw: { melta: 2 } },
+  suitFists:   { n: 'Suit fists', r: 0, A: 2, sk: 5, S: 6, AP: 0, D: 1, kw: {} },
+  railLance:   { n: 'Rail lance', r: 48, A: 2, sk: 4, S: 12, AP: -4, D: 'D6+1', kw: { heavy: 1 } },
+  twinIon:     { n: 'Twin ion cannons', r: 30, A: 4, sk: 4, S: 7, AP: -1, D: 2, kw: { twin: 1 } },
+  striderStomp: { n: 'Strider stomp', r: 0, A: 3, sk: 5, S: 7, AP: 0, D: 1, kw: {} }
 };
 
 /* Each unit lists its models: [count, guns, melee]. Plain models die first, specialists last.
@@ -247,7 +266,28 @@ const UNITS = {
   scrapRiders: { n: 'Scrap Riders', role: 'Fast attack', pts: 75, ic: '➶', M: 10, T: 6, Sv: 4, W: 4, Ld: 7, OC: 2,
     models: [[3, ['twinRivets'], ['riderHook']]], sizes: [{ n: 3, pts: 75 }, { n: 6, pts: 150 }] },
   junkStomper: { n: 'Junk Stomper', role: 'Walker', pts: 125, ic: '♖', M: 6, T: 9, Sv: 3, W: 9, Ld: 7, OC: 3, vehicle: 1,
-    models: [[1, ['roarCannon'], ['crusher']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['roarCannon'], ['flameBelcher']] }] }
+    models: [[1, ['roarCannon'], ['crusher']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['roarCannon'], ['flameBelcher']] }] },
+  /* ---------------- THE AURIC CONCORD ---------------- */
+  factorPrime: { n: 'Factor-Prime', role: 'Leader', pts: 55, ic: '✦', M: 6, T: 4, Sv: 3, W: 5, Ld: 6, OC: 1, ward: 5,
+    models: [[1, ['lumenCarbine'], ['gildedBlade']]], rule: { id: 'rrWoundAura', n: 'Calculated Aim', txt: 'Friendly units within 6" may re-roll wound rolls of 1 with ranged attacks.' },
+    lead: { id: 'apRanged', n: 'Precision Protocols', txt: "The unit's ranged weapons get an extra -1 AP." }, leads: ['lumenWardens', 'aegisSuits'],
+    opts: [{ id: 'gun', n: 'Ranged weapon', g: 0, f: 'guns', ch: [['lumenCarbine'], ['lanceProjector']] }] },
+  droneMarshal: { n: 'Drone-Marshal', role: 'Leader', pts: 40, ic: '❖', M: 8, T: 4, Sv: 4, W: 4, Ld: 7, OC: 1,
+    models: [[1, ['lumenPistol'], ['shockBaton']]],
+    lead: { id: 'wardShield', n: 'Shield Drones', txt: 'The unit has a 5+ ward save.' }, leads: ['lumenWardens', 'longshots'] },
+  lumenWardens: { n: 'Lumen Wardens', role: 'Core troops', pts: 55, ic: '◈', M: 6, T: 3, Sv: 4, W: 1, Ld: 7, OC: 2,
+    models: [[3, ['lumenRifle'], ['rifleStock']], [1, ['lumenRifle'], ['rifleStock']], [1, ['lumenRifle'], ['gildedBlade']]],
+    sizes: [{ n: 5, pts: 55 }, { n: 10, pts: 110 }],
+    opts: [{ id: 'spec', n: 'Special weapon', x2: 1, g: 1, f: 'guns', ch: [['lumenRifle'], ['seekerLauncher']] }] },
+  longshots: { n: 'Longshot Marksmen', role: 'Specialists', pts: 60, ic: '✛', M: 7, T: 3, Sv: 5, W: 1, Ld: 7, OC: 1,
+    models: [[5, ['longshot'], ['huntKnife']]], rule: { id: 'camo', n: 'Camouflage', txt: 'Always counts as being in cover.' } },
+  skimDrones: { n: 'Skimmer Drones', role: 'Fast attack', pts: 45, ic: '❂', M: 12, T: 4, Sv: 4, W: 1, Ld: 8, OC: 1,
+    models: [[4, ['droneRepeater'], ['droneRam']]], sizes: [{ n: 4, pts: 45 }, { n: 8, pts: 90 }] },
+  aegisSuits: { n: 'Aegis Battlesuits', role: 'Battlesuits', pts: 110, ic: '⬢', M: 8, T: 5, Sv: 3, W: 4, Ld: 7, OC: 1,
+    models: [[3, ['ionRepeater'], ['suitFists']]], sizes: [{ n: 3, pts: 110 }, { n: 6, pts: 220 }],
+    opts: [{ id: 'gun', n: 'Suit weapons', g: 0, f: 'guns', ch: [['ionRepeater'], ['scorchEmitter'], ['lanceProjector']] }] },
+  railStrider: { n: 'Railspire Strider', role: 'Walker', pts: 130, ic: '♞', M: 8, T: 9, Sv: 3, W: 10, Ld: 7, OC: 3, vehicle: 1,
+    models: [[1, ['railLance'], ['striderStomp']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['railLance'], ['twinIon']] }] }
 };
 for (const [k, U] of Object.entries(UNITS)) { U.id = k; if (!U.sizes) U.sizes = [{ n: U.models.reduce((a, g) => a + g[0], 0), pts: U.pts }]; U.opts = U.opts || []; }
 
@@ -262,6 +302,11 @@ const SUBS = {
     gut: { n: 'The Gutstompers', tag: 'Charge everything', id: 'stampede', rn: 'Stampede', txt: 'Your units add 1 to charge rolls (up to +2 with Fury of the Tide).' },
     smog: { n: 'The Smogchoked', tag: 'Hide in the haze', id: 'haze', rn: 'Choking Smog', txt: 'Enemy ranged attacks from more than 18" away get -1 to hit.' },
     heap: { n: 'The Scrapheap Crew', tag: 'Too stubborn to die', id: 'bodge', rn: 'Bodge Job', txt: 'Each time one of your models would lose a wound, roll a D6: on a 6 it is ignored.' }
+  },
+  concord: {
+    fleet: { n: 'The Gilded Fleet', tag: 'Point-blank volleys', id: 'halfAP', rn: 'Close Accounting', txt: 'Ranged attacks at half range or closer get an extra -1 AP.' },
+    veil: { n: 'The Veiled Syndicate', tag: 'Strike from the shadows', id: 'veil', rn: 'Shadow Trade', txt: 'Your units count as being in cover against attacks from more than 12" away.' },
+    ledger: { n: 'The Iron Ledger', tag: 'Own the ground', id: 'ledger', rn: 'Hold the Accounts', txt: 'Every model in your army gets +1 OC.' }
   }
 };
 const POINTS = [{ pts: 500, n: 'Skirmish', depth: 4, maxModels: 42 }, { pts: 750, n: 'Clash', depth: 5, maxModels: 55 }];
@@ -270,11 +315,15 @@ const ARMIES = {
   covenant: { n: 'The Ironclad Covenant', short: 'Covenant', col: '#9cc2f0', dark: '#1f3a66', blurb: 'Gene-forged knights: few, elite and hard to kill.',
     roster: ['knightCaptain', 'oathkeeper', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'],
     rule: { n: 'Oath of Iron', txt: 'Once per battle, each unit can re-roll all its failed hit rolls for one attack.' },
-    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'], leadsInto: 1, sub: 'anvil' },
+    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'], leadsInto: 1, sub: 'hunt' },
   rust: { n: 'The Rust Tide', short: 'Rust Tide', col: '#d0702c', dark: '#4f6b22', blurb: 'A scrap-built horde: cheap, many and brutal up close.',
     roster: ['scrapking', 'wrenchwright', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'],
     rule: { n: 'Rusted Fury', txt: 'Units get +1 Strength in melee on a turn they charged.' },
-    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'], leadsInto: 1, sub: 'gut' }
+    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'], leadsInto: 1, sub: 'gut' },
+  concord: { n: 'The Auric Concord', short: 'Concord', col: '#5fd0c0', dark: '#1d4f4a', blurb: 'Gilded merchant-lords with battlesuits, drones and long guns. Deadly at range, fragile up close.',
+    roster: ['factorPrime', 'droneMarshal', 'lumenWardens', 'longshots', 'skimDrones', 'aegisSuits', 'railStrider'],
+    rule: { n: 'Measured Fire', txt: 'Units that did not Advance add 1 to their ranged hit rolls, and can shoot after falling back.' },
+    list: ['factorPrime', 'lumenWardens:1', 'lumenWardens', 'longshots', 'skimDrones', 'railStrider', 'droneMarshal'], pairs: [[0, 1], [6, 2]], sub: 'fleet' }
 };
 
 /* Battlefields: each is rotationally symmetric so both sides get the same ground.
@@ -312,7 +361,8 @@ const GAMBITS = {
   ground: { n: 'Go to Ground', ic: '⛉', cp: 1, when: 'When an enemy unit shoots one of your units', txt: 'Your unit counts as being in cover (+1 save) against those attacks.' },
   hold: { n: 'Hold Fast', ic: '⚑', cp: 1, when: 'When one of your units fails a battle-shock test', txt: 'It passes instead.' },
   oath: { n: 'Renewed Oath', ic: '⚜', cp: 1, army: 'covenant', when: 'Your shooting phase, before a unit shoots', txt: 'A unit that has used its Oath of Iron can use it again.' },
-  surge: { n: 'Scrap Surge', ic: '⚙', cp: 1, army: 'rust', when: 'Your charge phase, before a unit charges', txt: 'Add 2 to that charge roll.' }
+  surge: { n: 'Scrap Surge', ic: '⚙', cp: 1, army: 'rust', when: 'Your charge phase, before a unit charges', txt: 'Add 2 to that charge roll.' },
+  overc: { n: 'Overcharge', ic: '⚡', cp: 1, army: 'concord', when: 'Your shooting phase, before a unit shoots', txt: 'That unit re-rolls failed wound rolls this phase.' }
 };
 
 /* Secondary missions: each player holds two at a time and scores them at the end of their own turn. */
@@ -351,8 +401,9 @@ function buildModels(e) {
   return groups;
 }
 function starterList(army) {
-  const A = ARMIES[army], units = A.list.map(d => ({ k: newKey(), d, s: 0, o: {} }));
+  const A = ARMIES[army], units = A.list.map(x => { const [d, s] = x.split(':'); return { k: newKey(), d, s: +(s || 0), o: {} }; });
   if (A.leadsInto != null) units[0].at = units[A.leadsInto].k;
+  for (const [l, b] of A.pairs || []) units[l].at = units[b].k;
   return { id: 'starter-' + army, name: 'Starter force', army, sub: A.sub, pts: 500, units, builtIn: true };
 }
 /* problems that stop a list from being taken to battle */
@@ -523,7 +574,7 @@ const hasRule = (u, id) => u.models.some(m => UNITS[m.p].rule && UNITS[m.p].rule
 const leadIs = (u, id) => !!(u.lead && UNITS[u.lead].lead && UNITS[u.lead].lead.id === id);
 const subOf = s => { const p = G.players[s], L = p.list; return L && SUBS[p.army] && SUBS[p.army][L.sub] || null; };
 const subIs = (s, id) => { const x = subOf(s); return !!(x && x.id === id); };
-const modelOC = (u, m) => UNITS[m.p].OC + (leadIs(u, 'ocBoost') ? 1 : 0);
+const modelOC = (u, m) => UNITS[m.p].OC + (leadIs(u, 'ocBoost') ? 1 : 0) + (subIs(u.side, 'ledger') ? 1 : 0);
 const unitOC = u => u.models.reduce((a, m) => a + modelOC(u, m), 0);
 
 /* ---------- building armies ---------- */
@@ -602,7 +653,7 @@ function deploy(side) {
   });
 }
 /* ---------- phases and Gambits ---------- */
-function setPhase(p) { G.phase = p; G.gamb = [{}, {}]; for (const u of G.units) u.focus = false; }
+function setPhase(p) { G.phase = p; G.gamb = [{}, {}]; for (const u of G.units) { u.focus = false; u.overc = false; } }
 const canGamb = (s, id) => { const g = GAMBITS[id]; return G.cp[s] >= g.cp && !(G.gamb && G.gamb[s][id]) && (!g.army || G.players[s].army === g.army); };
 function useGamb(s, id) { G.gstat = G.gstat || {}; G.gstat[id] = (G.gstat[id] || 0) + 1; G.cp[s] -= GAMBITS[id].cp; G.gamb = G.gamb || [{}, {}]; G.gamb[s][id] = true; log(`${pverb(s, 'uses', 'use')} ${GAMBITS[id].n}.`); Sfx.play('tap'); }
 /* ---------- secondary missions ---------- */
@@ -658,6 +709,7 @@ function los(a, b) {
   return true;
 }
 function inCover(target, from) {
+  if (hasRule(target, 'camo') || (subIs(target.side, 'veil') && unitDistIn(target, from) > 12)) return true;
   let n = 0;
   for (const m of target.models) {
     if (TERRAIN[key(m.x, m.y)]) { n++; continue; }
@@ -689,17 +741,17 @@ function woundNeed(S, T) { return S >= 2 * T ? 2 : S > T ? 3 : S === T ? 4 : S *
 function saveNeed(def, AP, cover) {
   const D = UD(def); if (AP < 0 && subIs(def.side, 'bulwark')) AP++;
   let sv = Math.max(2, D.Sv - AP - (cover ? 1 : 0)); if (leadIs(def, 'saveUp') && sv > 3) sv--;
-  if (D.ward && D.ward < sv) sv = D.ward; return sv;
+  const ward = Math.min(D.ward || 7, leadIs(def, 'wardShield') ? 5 : 7); if (ward < sv) sv = ward; return sv;
 }
 /* everything that tweaks one weapon's attack: Strength, wound roll, AP and the hit roll */
 function atkMods(att, def, w, melee, g) {
   const rust = melee && att.chargedNow && G.players[att.side].army === 'rust';
   const S = w.S + (rust ? 1 : 0) + (melee && leadIs(att, 'meleeStr') ? 1 : 0);
   const wn = Math.max(2, woundNeed(S, UD(def).T) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
-  const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0);
-  const heavy = !melee && w.kw.heavy && stationary(att), haze = !melee && g && g.far && subIs(def.side, 'haze');
-  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0) - (!melee && att.focus ? 1 : 0)) + (haze ? 1 : 0));
-  return { S, wn, AP, need, heavy, haze };
+  const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0) - (!melee && leadIs(att, 'apRanged') ? 1 : 0) - (!melee && g && g.half && subIs(att.side, 'halfAP') ? 1 : 0);
+  const heavy = !melee && w.kw.heavy && stationary(att), measured = !melee && !att.advanced && G.players[att.side].army === 'concord', haze = !melee && g && g.far && subIs(def.side, 'haze');
+  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0) - (!melee && att.focus ? 1 : 0) - (!melee && !att.advanced && G.players[att.side].army === 'concord' ? 1 : 0)) + (haze ? 1 : 0));
+  return { S, wn, AP, need, heavy, haze, measured };
 }
 /* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
 function shootingGroups(att, def) {
@@ -715,12 +767,13 @@ function shootingGroups(att, def) {
   return Object.values(groups);
 }
 function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true, far: false }; g[wid].models++; } return Object.values(g); }
-function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return shootTargets(u).length > 0; }
+function canShoot(u) { if (!u.models.length || u.shot || (u.fellBack && G.players[u.side].army !== 'concord') || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
 function canCharge(u) { return u.models.length && (!u.advanced || u.rapid) && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
 function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b) + (u.surge ? 2 : 0); }
 const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
+function woundRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rrWoundAura') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rerollOnes') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 /* expected damage (for the AI and the hint line) */
 function expected(att, def, melee) {
@@ -759,13 +812,13 @@ async function resolveAttack(att, def, melee) {
     if (w.kw.torrent) { hits = A; await Tray.note(head, `${A} automatic hit${A === 1 ? '' : 's'} (torrent).`); }
     else {
       const need = M.need;
-      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${M.heavy ? ' (heavy, stood still)' : ''}${M.haze ? ' (−1: choking smog)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att) || (!melee && subIs(att.side, 'prey')), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
+      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${M.heavy ? ' (heavy, stood still)' : ''}${M.measured ? ' (measured fire)' : ''}${M.haze ? ' (−1: choking smog)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att) || (!melee && subIs(att.side, 'prey')), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
       hits = dice.filter(v => v >= need).length;
     }
     if (!hits) { log(`${head}: no hits.`); continue; }
     // wound
-    const wn = M.wn, prey = !melee && subIs(att.side, 'prey');
-    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : prey ? ' (marked prey: re-roll 1s)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin, rrOnes: prey });
+    const wn = M.wn, prey = !melee && (subIs(att.side, 'prey') || woundRerollOnes(att)), overc = !melee && att.overc;
+    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : overc ? ' (overcharge: re-roll fails)' : prey ? ' (re-roll 1s)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin || overc, rrOnes: prey });
     const wounds = wd.filter(v => v >= wn).length;
     if (!wounds) { log(`${head}: ${hits} hit${hits > 1 ? 's' : ''}, no wounds.`); continue; }
     // save (the defender rolls)
@@ -897,6 +950,7 @@ const AI = {
     const s = u.side, e = expected(u, v, false);
     if (e >= 3 && canGamb(s, 'focus')) { useGamb(s, 'focus'); u.focus = true; }
     if (u.oath && e >= 3 && G.cp[s] >= 2 && canGamb(s, 'oath')) { useGamb(s, 'oath'); u.oath = false; }
+    if (e >= 3 && G.cp[s] >= 2 && canGamb(s, 'overc')) { useGamb(s, 'overc'); u.overc = true; }
   },
   rapidGambit(u) {
     if (!u.models.length || !u.advanced || u.charged || u.fellBack || engaged(u) || !AI.isMelee(u) || !canGamb(u.side, 'rapid') || !chargeTargets(u).length) return;
@@ -1148,6 +1202,7 @@ const Battle = {
       else if (id === 'oath') { u.oath = false; toast(`${UD(u).n} renews its Oath of Iron`); }
       else if (id === 'rapid') { u.rapid = true; toast(`${UD(u).n} can charge this turn`); }
       else if (id === 'surge') { u.surge = true; toast(`${UD(u).n}: +2 to its charge roll`); }
+      else if (id === 'overc') { u.overc = true; toast(`${UD(u).n} re-rolls failed wounds this phase`); }
     }
     this.render();
   },
@@ -1212,7 +1267,7 @@ const Battle = {
         if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
         else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
-      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
+      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : '') + (!u.overc && canGamb(s, 'overc') ? B('g_overc', '⚡ Overcharge · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.fellBack ? "Can't shoot after falling back." : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
       else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold') + (!u.surge && canGamb(s, 'surge') ? B('g_surge', '⚙ Scrap Surge · 1 CP', 'gmb') : ''); else if (u.advanced && !u.rapid && !u.charged && !engaged(u) && !u.fellBack && chargeTargets(u).length && canGamb(s, 'rapid')) { act = B('g_rapid', '⇶ Rapid Assault · 1 CP', 'gmb'); hint = 'This unit advanced. Rapid Assault lets it charge anyway.'; } else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;
     const next = { move: 'End movement →', shoot: 'End shooting →', charge: 'End charges → Fight' }[G.phase];
@@ -1230,6 +1285,7 @@ const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.3.1', '20 Nov 2026', 'The Auric Concord', ['A third army: the Auric Concord, gilded merchant-lords with battlesuits, drones and long guns', 'Seven new datasheets: Factor-Prime, Drone-Marshal, Lumen Wardens, Longshot Marksmen, Skimmer Drones, Aegis Battlesuits and the Railspire Strider', 'Army rule Measured Fire, three sub-factions and a new Gambit, Overcharge', 'Choose your enemy when you start a battle, or let the game surprise you', "The Covenant starter force now fights as the Order of the Hunt"]],
   ['0.3.0', '20 Nov 2026', 'Tactics', ['Gambits: spend command points on Focused Fire, Rapid Assault, Go to Ground, Hold Fast, plus one special order per army', 'Secondary missions: hold two mission cards and score them for bonus VP; swap one for 1 CP', 'Three battlefields: the Ruined Hab-Block, the Crossroads and the Pincer (deploy from opposite corners)', 'Deployment zones are shaded in round 1, and the end screen splits objective and mission VP']],
   ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
   ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
@@ -1272,7 +1328,7 @@ const Shell = {
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
       <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 3a: Tactics</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 3b: The Auric Concord</div></div>`);
   },
   async play(fromList) {
     const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
@@ -1283,7 +1339,9 @@ const Shell = {
     if (!army) return;
     const l1 = fromList ? JSON.parse(JSON.stringify(fromList)) : await this.pickList(army, pts, mode === 'pp' ? 'Player 1' : 'Your');
     if (!l1) return;
-    const other = Object.keys(ARMIES).find(k => k !== army);
+    const others = Object.keys(ARMIES).filter(k => k !== army);
+    const other = others.length === 1 ? others[0] : await choose(mode === 'pp' ? 'Player 2: choose your army' : 'Choose the enemy', others.map(k => `<b style="color:${ARMIES[k].col}">${ARMIES[k].n}</b>: ${ARMIES[k].blurb}`).join('<br><br>'), others.map(k => ({ l: ARMIES[k].short, v: k })).concat(mode === 'ai' ? [{ l: '🎲 Surprise me', v: 'rnd', p: 1 }] : []).concat([{ l: 'Back', v: null }])).then(v => v === 'rnd' ? others[Math.floor(Math.random() * others.length)] : v);
+    if (!other) return;
     const l2 = mode === 'ai' ? randomList(other, pts) : await this.pickList(other, pts, 'Player 2');
     if (!l2) return;
     const players = mode === 'ai' ? [{ name: 'You', army, type: 'human', list: l1 }, { name: 'The AI', army: other, type: 'ai', list: l2 }] : [{ name: 'Player 1', army, type: 'human', list: l1 }, { name: 'Player 2', army: other, type: 'human', list: l2 }];
@@ -1462,7 +1520,7 @@ html:not(.kg-can-install) [data-install]{display:none!important}
 // Kralnu Games update check. When you push an update, change the game's version
 // AND version.json to the same new value; players then get a "new version" notice.
 (function(){
-  var NAME="Iron Dominion",BUILD="0.3.0",CACHES=["idom-"],CHECK=true;
+  var NAME="Iron Dominion",BUILD="0.3.1",CACHES=["idom-"],CHECK=true;
   var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
   if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
   function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}

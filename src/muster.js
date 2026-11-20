@@ -22,8 +22,9 @@ function buildModels(e) {
   return groups;
 }
 function starterList(army) {
-  const A = ARMIES[army], units = A.list.map(d => ({ k: newKey(), d, s: 0, o: {} }));
+  const A = ARMIES[army], units = A.list.map(x => { const [d, s] = x.split(':'); return { k: newKey(), d, s: +(s || 0), o: {} }; });
   if (A.leadsInto != null) units[0].at = units[A.leadsInto].k;
+  for (const [l, b] of A.pairs || []) units[l].at = units[b].k;
   return { id: 'starter-' + army, name: 'Starter force', army, sub: A.sub, pts: 500, units, builtIn: true };
 }
 /* problems that stop a list from being taken to battle */

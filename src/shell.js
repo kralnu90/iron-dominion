@@ -8,6 +8,7 @@ const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.3.1', '20 Nov 2026', 'The Auric Concord', ['A third army: the Auric Concord, gilded merchant-lords with battlesuits, drones and long guns', 'Seven new datasheets: Factor-Prime, Drone-Marshal, Lumen Wardens, Longshot Marksmen, Skimmer Drones, Aegis Battlesuits and the Railspire Strider', 'Army rule Measured Fire, three sub-factions and a new Gambit, Overcharge', 'Choose your enemy when you start a battle, or let the game surprise you', "The Covenant starter force now fights as the Order of the Hunt"]],
   ['0.3.0', '20 Nov 2026', 'Tactics', ['Gambits: spend command points on Focused Fire, Rapid Assault, Go to Ground, Hold Fast, plus one special order per army', 'Secondary missions: hold two mission cards and score them for bonus VP; swap one for 1 CP', 'Three battlefields: the Ruined Hab-Block, the Crossroads and the Pincer (deploy from opposite corners)', 'Deployment zones are shaded in round 1, and the end screen splits objective and mission VP']],
   ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
   ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
@@ -50,7 +51,7 @@ const Shell = {
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
       <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 3a: Tactics</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 3b: The Auric Concord</div></div>`);
   },
   async play(fromList) {
     const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
@@ -61,7 +62,9 @@ const Shell = {
     if (!army) return;
     const l1 = fromList ? JSON.parse(JSON.stringify(fromList)) : await this.pickList(army, pts, mode === 'pp' ? 'Player 1' : 'Your');
     if (!l1) return;
-    const other = Object.keys(ARMIES).find(k => k !== army);
+    const others = Object.keys(ARMIES).filter(k => k !== army);
+    const other = others.length === 1 ? others[0] : await choose(mode === 'pp' ? 'Player 2: choose your army' : 'Choose the enemy', others.map(k => `<b style="color:${ARMIES[k].col}">${ARMIES[k].n}</b>: ${ARMIES[k].blurb}`).join('<br><br>'), others.map(k => ({ l: ARMIES[k].short, v: k })).concat(mode === 'ai' ? [{ l: '🎲 Surprise me', v: 'rnd', p: 1 }] : []).concat([{ l: 'Back', v: null }])).then(v => v === 'rnd' ? others[Math.floor(Math.random() * others.length)] : v);
+    if (!other) return;
     const l2 = mode === 'ai' ? randomList(other, pts) : await this.pickList(other, pts, 'Player 2');
     if (!l2) return;
     const players = mode === 'ai' ? [{ name: 'You', army, type: 'human', list: l1 }, { name: 'The AI', army: other, type: 'ai', list: l2 }] : [{ name: 'Player 1', army, type: 'human', list: l1 }, { name: 'Player 2', army: other, type: 'human', list: l2 }];

@@ -38,4 +38,11 @@ Kris may swap the two new armies for others: check before building 3b.
 - Settings has Battlefield (random or one map). The round box in the HUD opens the missions + Gambits sheet. Zones are shaded in round 1.
 - Balance: a v0.2.0 control run showed the Covenant actually winning about 70% of AI-v-AI starter games (earlier small samples were lucky), so the Rustborn Mob went back to T5 (hackers stay AP0). Now starters ~38-25, random 500 6-8, random 750 5-3.
 
-## Next: 3b, the Auric Concord
+## v0.3.1 Stage 3b "The Auric Concord" (20 Nov 2026)
+- Third army (col #5fd0c0): factorPrime (aura re-roll ranged wound 1s; lead -1 AP ranged), droneMarshal (lead 5+ ward), lumenWardens (T3 Sv4, seeker launcher option x2), longshots (camo: always in cover), skimDrones, aegisSuits (ion repeater / scorch emitter / lance projector), railStrider (rail lance / twin ion).
+- Army rule Measured Fire: +1 to ranged hits unless the unit advanced; can shoot after falling back. Subs: fleet (half-range -1 AP), veil (cover vs attacks from over 12"), ledger (+1 OC). Gambit: overc (Overcharge: re-roll failed wounds this phase).
+- ARMIES entries can use pairs [[leaderIdx, unitIdx]] and list items 'id:sizeIndex'. Play flow now asks for the enemy army (or Surprise me).
+- Balance (starters): Concord v Covenant 13-19 once the Covenant starter switched to the Order of the Hunt (Anvil shut down the Concord's AP-1 guns: 6-25); Covenant v Rust 15-16 with Hunt; Concord v Rust 22-10 (revisit in 3d).
+- /tmp/idsoak5.py args: N mode pts covSub rustSub extraJS armyA armyB.
+
+## Next: 3c, the Chitin Brood

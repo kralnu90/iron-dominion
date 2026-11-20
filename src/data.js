@@ -3,7 +3,7 @@
    IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
    Distances are in inches; the board is a grid of 2" squares.
    ============================================================================ */
-const GAME_VERSION = '0.3.0';
+const GAME_VERSION = '0.3.1';
 const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
 
 /* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
@@ -43,7 +43,26 @@ const WEAPONS = {
   spikeLauncher: { n: 'Spike launcher', r: 24, A: 1, sk: 5, S: 9, AP: -2, D: 'D3', kw: {} },
   flameBelcher: { n: 'Flame belcher', r: 12, A: '2D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1 } },
   sparkWelder: { n: 'Spark welder', r: 12, A: 'D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1, pistol: 1 } },
-  bigWrench:   { n: 'Big wrench', r: 0, A: 3, sk: 3, S: 7, AP: -1, D: 2, kw: {} }
+  bigWrench:   { n: 'Big wrench', r: 0, A: 3, sk: 3, S: 7, AP: -1, D: 2, kw: {} },
+  /* the Auric Concord */
+  lumenRifle:  { n: 'Lumen rifle', r: 30, A: 1, sk: 4, S: 5, AP: 0, D: 1, kw: { rapid: 1 } },
+  lumenCarbine: { n: 'Lumen carbine', r: 18, A: 2, sk: 3, S: 5, AP: -1, D: 1, kw: { assault: 1 } },
+  lumenPistol: { n: 'Lumen pistol', r: 12, A: 1, sk: 4, S: 5, AP: 0, D: 1, kw: { pistol: 1 } },
+  seekerLauncher: { n: 'Seeker launcher', r: 36, A: 1, sk: 4, S: 8, AP: -2, D: 'D3', kw: { heavy: 1 } },
+  gildedBlade: { n: 'Gilded blade', r: 0, A: 3, sk: 3, S: 4, AP: -1, D: 1, kw: {} },
+  shockBaton:  { n: 'Shock baton', r: 0, A: 2, sk: 4, S: 4, AP: 0, D: 1, kw: {} },
+  rifleStock:  { n: 'Rifle stock', r: 0, A: 1, sk: 5, S: 3, AP: 0, D: 1, kw: {} },
+  longshot:    { n: 'Longshot rifle', r: 36, A: 1, sk: 3, S: 5, AP: -1, D: 2, kw: { heavy: 1 } },
+  huntKnife:   { n: 'Hunting knife', r: 0, A: 1, sk: 4, S: 3, AP: 0, D: 1, kw: {} },
+  droneRepeater: { n: 'Drone repeater', r: 24, A: 2, sk: 4, S: 5, AP: 0, D: 1, kw: { twin: 1 } },
+  droneRam:    { n: 'Drone ram', r: 0, A: 1, sk: 5, S: 3, AP: 0, D: 1, kw: {} },
+  ionRepeater: { n: 'Ion repeater', r: 24, A: 3, sk: 4, S: 6, AP: -1, D: 2, kw: {} },
+  scorchEmitter: { n: 'Scorch emitter', r: 12, A: 'D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1 } },
+  lanceProjector: { n: 'Lance projector', r: 18, A: 1, sk: 4, S: 9, AP: -4, D: 'D6', kw: { melta: 2 } },
+  suitFists:   { n: 'Suit fists', r: 0, A: 2, sk: 5, S: 6, AP: 0, D: 1, kw: {} },
+  railLance:   { n: 'Rail lance', r: 48, A: 2, sk: 4, S: 12, AP: -4, D: 'D6+1', kw: { heavy: 1 } },
+  twinIon:     { n: 'Twin ion cannons', r: 30, A: 4, sk: 4, S: 7, AP: -1, D: 2, kw: { twin: 1 } },
+  striderStomp: { n: 'Strider stomp', r: 0, A: 3, sk: 5, S: 7, AP: 0, D: 1, kw: {} }
 };
 
 /* Each unit lists its models: [count, guns, melee]. Plain models die first, specialists last.
@@ -89,7 +108,28 @@ const UNITS = {
   scrapRiders: { n: 'Scrap Riders', role: 'Fast attack', pts: 75, ic: '➶', M: 10, T: 6, Sv: 4, W: 4, Ld: 7, OC: 2,
     models: [[3, ['twinRivets'], ['riderHook']]], sizes: [{ n: 3, pts: 75 }, { n: 6, pts: 150 }] },
   junkStomper: { n: 'Junk Stomper', role: 'Walker', pts: 125, ic: '♖', M: 6, T: 9, Sv: 3, W: 9, Ld: 7, OC: 3, vehicle: 1,
-    models: [[1, ['roarCannon'], ['crusher']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['roarCannon'], ['flameBelcher']] }] }
+    models: [[1, ['roarCannon'], ['crusher']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['roarCannon'], ['flameBelcher']] }] },
+  /* ---------------- THE AURIC CONCORD ---------------- */
+  factorPrime: { n: 'Factor-Prime', role: 'Leader', pts: 55, ic: '✦', M: 6, T: 4, Sv: 3, W: 5, Ld: 6, OC: 1, ward: 5,
+    models: [[1, ['lumenCarbine'], ['gildedBlade']]], rule: { id: 'rrWoundAura', n: 'Calculated Aim', txt: 'Friendly units within 6" may re-roll wound rolls of 1 with ranged attacks.' },
+    lead: { id: 'apRanged', n: 'Precision Protocols', txt: "The unit's ranged weapons get an extra -1 AP." }, leads: ['lumenWardens', 'aegisSuits'],
+    opts: [{ id: 'gun', n: 'Ranged weapon', g: 0, f: 'guns', ch: [['lumenCarbine'], ['lanceProjector']] }] },
+  droneMarshal: { n: 'Drone-Marshal', role: 'Leader', pts: 40, ic: '❖', M: 8, T: 4, Sv: 4, W: 4, Ld: 7, OC: 1,
+    models: [[1, ['lumenPistol'], ['shockBaton']]],
+    lead: { id: 'wardShield', n: 'Shield Drones', txt: 'The unit has a 5+ ward save.' }, leads: ['lumenWardens', 'longshots'] },
+  lumenWardens: { n: 'Lumen Wardens', role: 'Core troops', pts: 55, ic: '◈', M: 6, T: 3, Sv: 4, W: 1, Ld: 7, OC: 2,
+    models: [[3, ['lumenRifle'], ['rifleStock']], [1, ['lumenRifle'], ['rifleStock']], [1, ['lumenRifle'], ['gildedBlade']]],
+    sizes: [{ n: 5, pts: 55 }, { n: 10, pts: 110 }],
+    opts: [{ id: 'spec', n: 'Special weapon', x2: 1, g: 1, f: 'guns', ch: [['lumenRifle'], ['seekerLauncher']] }] },
+  longshots: { n: 'Longshot Marksmen', role: 'Specialists', pts: 60, ic: '✛', M: 7, T: 3, Sv: 5, W: 1, Ld: 7, OC: 1,
+    models: [[5, ['longshot'], ['huntKnife']]], rule: { id: 'camo', n: 'Camouflage', txt: 'Always counts as being in cover.' } },
+  skimDrones: { n: 'Skimmer Drones', role: 'Fast attack', pts: 45, ic: '❂', M: 12, T: 4, Sv: 4, W: 1, Ld: 8, OC: 1,
+    models: [[4, ['droneRepeater'], ['droneRam']]], sizes: [{ n: 4, pts: 45 }, { n: 8, pts: 90 }] },
+  aegisSuits: { n: 'Aegis Battlesuits', role: 'Battlesuits', pts: 110, ic: '⬢', M: 8, T: 5, Sv: 3, W: 4, Ld: 7, OC: 1,
+    models: [[3, ['ionRepeater'], ['suitFists']]], sizes: [{ n: 3, pts: 110 }, { n: 6, pts: 220 }],
+    opts: [{ id: 'gun', n: 'Suit weapons', g: 0, f: 'guns', ch: [['ionRepeater'], ['scorchEmitter'], ['lanceProjector']] }] },
+  railStrider: { n: 'Railspire Strider', role: 'Walker', pts: 130, ic: '♞', M: 8, T: 9, Sv: 3, W: 10, Ld: 7, OC: 3, vehicle: 1,
+    models: [[1, ['railLance'], ['striderStomp']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['railLance'], ['twinIon']] }] }
 };
 for (const [k, U] of Object.entries(UNITS)) { U.id = k; if (!U.sizes) U.sizes = [{ n: U.models.reduce((a, g) => a + g[0], 0), pts: U.pts }]; U.opts = U.opts || []; }
 
@@ -104,6 +144,11 @@ const SUBS = {
     gut: { n: 'The Gutstompers', tag: 'Charge everything', id: 'stampede', rn: 'Stampede', txt: 'Your units add 1 to charge rolls (up to +2 with Fury of the Tide).' },
     smog: { n: 'The Smogchoked', tag: 'Hide in the haze', id: 'haze', rn: 'Choking Smog', txt: 'Enemy ranged attacks from more than 18" away get -1 to hit.' },
     heap: { n: 'The Scrapheap Crew', tag: 'Too stubborn to die', id: 'bodge', rn: 'Bodge Job', txt: 'Each time one of your models would lose a wound, roll a D6: on a 6 it is ignored.' }
+  },
+  concord: {
+    fleet: { n: 'The Gilded Fleet', tag: 'Point-blank volleys', id: 'halfAP', rn: 'Close Accounting', txt: 'Ranged attacks at half range or closer get an extra -1 AP.' },
+    veil: { n: 'The Veiled Syndicate', tag: 'Strike from the shadows', id: 'veil', rn: 'Shadow Trade', txt: 'Your units count as being in cover against attacks from more than 12" away.' },
+    ledger: { n: 'The Iron Ledger', tag: 'Own the ground', id: 'ledger', rn: 'Hold the Accounts', txt: 'Every model in your army gets +1 OC.' }
   }
 };
 const POINTS = [{ pts: 500, n: 'Skirmish', depth: 4, maxModels: 42 }, { pts: 750, n: 'Clash', depth: 5, maxModels: 55 }];
@@ -112,11 +157,15 @@ const ARMIES = {
   covenant: { n: 'The Ironclad Covenant', short: 'Covenant', col: '#9cc2f0', dark: '#1f3a66', blurb: 'Gene-forged knights: few, elite and hard to kill.',
     roster: ['knightCaptain', 'oathkeeper', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'],
     rule: { n: 'Oath of Iron', txt: 'Once per battle, each unit can re-roll all its failed hit rolls for one attack.' },
-    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'], leadsInto: 1, sub: 'anvil' },
+    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'], leadsInto: 1, sub: 'hunt' },
   rust: { n: 'The Rust Tide', short: 'Rust Tide', col: '#d0702c', dark: '#4f6b22', blurb: 'A scrap-built horde: cheap, many and brutal up close.',
     roster: ['scrapking', 'wrenchwright', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'],
     rule: { n: 'Rusted Fury', txt: 'Units get +1 Strength in melee on a turn they charged.' },
-    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'], leadsInto: 1, sub: 'gut' }
+    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'], leadsInto: 1, sub: 'gut' },
+  concord: { n: 'The Auric Concord', short: 'Concord', col: '#5fd0c0', dark: '#1d4f4a', blurb: 'Gilded merchant-lords with battlesuits, drones and long guns. Deadly at range, fragile up close.',
+    roster: ['factorPrime', 'droneMarshal', 'lumenWardens', 'longshots', 'skimDrones', 'aegisSuits', 'railStrider'],
+    rule: { n: 'Measured Fire', txt: 'Units that did not Advance add 1 to their ranged hit rolls, and can shoot after falling back.' },
+    list: ['factorPrime', 'lumenWardens:1', 'lumenWardens', 'longshots', 'skimDrones', 'railStrider', 'droneMarshal'], pairs: [[0, 1], [6, 2]], sub: 'fleet' }
 };
 
 /* Battlefields: each is rotationally symmetric so both sides get the same ground.
@@ -154,7 +203,8 @@ const GAMBITS = {
   ground: { n: 'Go to Ground', ic: '⛉', cp: 1, when: 'When an enemy unit shoots one of your units', txt: 'Your unit counts as being in cover (+1 save) against those attacks.' },
   hold: { n: 'Hold Fast', ic: '⚑', cp: 1, when: 'When one of your units fails a battle-shock test', txt: 'It passes instead.' },
   oath: { n: 'Renewed Oath', ic: '⚜', cp: 1, army: 'covenant', when: 'Your shooting phase, before a unit shoots', txt: 'A unit that has used its Oath of Iron can use it again.' },
-  surge: { n: 'Scrap Surge', ic: '⚙', cp: 1, army: 'rust', when: 'Your charge phase, before a unit charges', txt: 'Add 2 to that charge roll.' }
+  surge: { n: 'Scrap Surge', ic: '⚙', cp: 1, army: 'rust', when: 'Your charge phase, before a unit charges', txt: 'Add 2 to that charge roll.' },
+  overc: { n: 'Overcharge', ic: '⚡', cp: 1, army: 'concord', when: 'Your shooting phase, before a unit shoots', txt: 'That unit re-rolls failed wound rolls this phase.' }
 };
 
 /* Secondary missions: each player holds two at a time and scores them at the end of their own turn. */

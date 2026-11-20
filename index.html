@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Iron Dominion</title>
+<meta name="description" content="Iron Dominion: a grimdark sci-fi tabletop wargame for your phone. Command squads, roll the dice yourself and hold the objectives. Free, from Kralnu Games.">
+<meta name="theme-color" content="#14110f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta property="og:title" content="Iron Dominion">
+<meta property="og:description" content="A grimdark tabletop wargame for your phone. Roll the dice yourself and hold the line.">
+<meta property="og:image" content="icons/icon-512.png">
+<style>
+:root{--gold:#d9b54a;--ink:#14110f;--panel:#221c18;--edge:#4a3a2c;--text:#efe6d6;--dim:#a8998a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:radial-gradient(ellipse at 50% -10%,#3a2a20,#14110f 60%);color:var(--text);font:15px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;min-height:100vh}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;letter-spacing:.04em;margin:.2em 0}
+button{font:inherit;color:inherit;cursor:pointer}
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0c0a09;transition:opacity .6s}
+#splash.gone{opacity:0;pointer-events:none}
+#splash img{width:120px;filter:drop-shadow(0 0 20px rgba(217,181,74,.35))}
+#splash h1{color:var(--gold);font-size:30px;text-transform:uppercase}
+#splash p{color:var(--dim);font-size:12px;margin:0}
+.menu{max-width:420px;margin:0 auto;padding:28px 18px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.menu h1{color:var(--gold);font-size:34px;text-transform:uppercase;text-shadow:0 2px 0 #000}
+.menu .tag{color:var(--dim);margin:0 0 8px}
+.crest img{width:110px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
+.tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px;border-radius:14px;border:1px solid var(--edge);background:linear-gradient(160deg,#2c241e,#1b1613);box-shadow:0 4px 12px rgba(0,0,0,.4);font-weight:700}
+.tile span{font-size:24px;color:var(--gold)}
+.tile small{font-weight:400;color:var(--dim);font-size:12px}
+.tile.big{padding:20px;font-size:18px;border-color:var(--gold);background:linear-gradient(160deg,#4a3818,#241a0e)}
+.row,.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ver{color:var(--dim);font-size:11px;margin-top:8px}
+.b{border:1px solid var(--edge);background:#2c241e;border-radius:10px;padding:9px 14px;font-weight:700;display:inline-block;text-decoration:none;color:var(--text)}
+.b.gold{background:linear-gradient(180deg,#e6c55e,#b38a2a);color:#1d1406;border-color:#f0d47a}
+.b.big{padding:13px 22px;font-size:17px}
+.b.end{background:#3a2a20;border-color:#7a5a3a}
+.b.danger{background:#5a1c18;border-color:#8a3a30;margin-top:10px}
+.ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+.dlg{background:linear-gradient(170deg,#2a221c,#17120f);border:1px solid var(--gold);border-radius:16px;padding:16px;width:min(380px,100%);max-height:88vh;overflow:auto;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.dlg.wide{width:min(460px,100%);text-align:left}
+.dlg h2{color:var(--gold);font-size:20px}
+.dlg-b{color:var(--text);font-size:14px;margin:8px 0 12px;text-align:left}
+.dlg-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.prose p,.prose li{font-size:14px}.prose ol{padding-left:20px}.center{text-align:center}
+.small{color:var(--dim);font-size:12px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}
+.set select,.set input[type=range]{flex:0 0 55%}
+select,input,textarea{background:#1a1512;color:var(--text);border:1px solid var(--edge);border-radius:8px;padding:7px;font:inherit;width:100%}
+textarea{min-height:64px;margin:6px 0}
+/* battle */
+body.in-battle{overflow-x:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 8px}
+.topbar button{width:38px;height:34px;border-radius:9px;border:1px solid var(--edge);background:#2c241e}
+.topbar span{font-family:Georgia,serif;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+#bf{max-width:520px;margin:0 auto;padding:0 4px 12px}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:6px}
+.hud .side{border-left:4px solid var(--c);background:#221c18;border-radius:8px;padding:4px 8px;display:flex;flex-direction:column;font-size:12px}
+.hud .side.s1{border-left:0;border-right:4px solid var(--c);text-align:right}
+.hud .side span{color:var(--dim)}
+.hud .rnd{text-align:center;display:flex;flex-direction:column;font-size:12px}.hud .rnd b{color:var(--gold)}
+.board-wrap{display:flex;justify-content:center}
+.board{position:relative;background-color:#3b3a33;background-image:linear-gradient(rgba(0,0,0,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.18) 1px,transparent 1px);border:3px solid #5a4632;border-radius:6px;box-shadow:inset 0 0 40px rgba(0,0,0,.5),0 10px 24px rgba(0,0,0,.6);overflow:hidden;touch-action:manipulation}
+.board::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(208,112,44,.08) 0,transparent 20%,transparent 80%,rgba(43,74,122,.12) 100%);pointer-events:none}
+.t-ruin{position:absolute;background:linear-gradient(135deg,#6e6457,#4b443b);border:1px solid #2d2822;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.t-crater{position:absolute;background:radial-gradient(circle,#2a2622 30%,#4a453d 70%,transparent 72%)}
+.t-wall{position:absolute;background:repeating-linear-gradient(45deg,#7a6a4a 0 4px,#5a4c33 4px 8px);border-radius:3px;transform:scaleY(.5)}
+.reach{position:absolute;background:rgba(120,220,140,.28);outline:1px solid rgba(120,220,140,.35)}
+.obj{position:absolute;border:2px dashed;border-radius:50%;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.obj span{width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+.mdl{position:absolute;border-radius:50%;border:2px solid rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;line-height:1;box-shadow:0 2px 4px rgba(0,0,0,.6);transition:left .35s ease,top .35s ease}
+.mdl.veh{border-radius:22%}
+.mdl.sel{box-shadow:0 0 0 3px #fff,0 0 12px #fff}
+.mdl.view{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.mdl.tgt{box-shadow:0 0 0 3px #ff5a4a,0 0 12px #ff5a4a;animation:pulse 1s infinite}
+.mdl.aim{box-shadow:0 0 0 3px #ff3b2f,0 0 16px #ff3b2f}
+.mdl.fl{box-shadow:0 0 0 3px #ffe58a}
+.mdl.shk{filter:saturate(.3) brightness(.8)}
+.mdl .wd{position:absolute;right:-5px;top:-5px;background:#c0261c;color:#fff;font-style:normal;font-size:9px;border-radius:7px;padding:0 3px}
+@keyframes pulse{50%{box-shadow:0 0 0 3px #ff5a4a,0 0 2px #ff5a4a}}
+.banner{position:absolute;left:0;right:0;top:40%;text-align:center;pointer-events:none;opacity:0}
+.banner b{display:block;font-family:Georgia,serif;color:var(--gold);font-size:20px;text-shadow:0 2px 6px #000}
+.banner span{color:#fff;text-shadow:0 2px 6px #000;font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+.banner.show{animation:ban 1.6s ease}
+@keyframes ban{0%{opacity:0;transform:translateY(8px)}15%,70%{opacity:1;transform:none}100%{opacity:0}}
+.panel{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.msg{text-align:center;color:var(--dim);font-size:13px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.card{background:#221c18;border:1px solid var(--edge);border-radius:12px;padding:8px 10px;font-size:12px}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}.card-h b{font-size:14px}.card-h span{color:var(--dim)}
+.stats{display:flex;gap:4px;margin:4px 0 6px}.stats div{flex:1;background:#14110f;border-radius:6px;text-align:center;padding:2px 0}.stats i{display:block;font-style:normal;font-size:9px;color:var(--dim)}.stats b{font-size:13px}
+.wl{margin:2px 0}.wl span{color:var(--dim)}
+.rule{margin-top:4px;color:#e8d9a8}
+.flags{margin-top:4px;display:flex;gap:4px;flex-wrap:wrap}.flags span{background:#3a2a20;border-radius:6px;padding:1px 6px;font-size:11px}
+/* dice tray */
+#tray{position:fixed;left:0;right:0;bottom:0;z-index:50;transform:translateY(110%);transition:transform .3s ease;display:flex;justify-content:center;padding:0 6px calc(8px + env(safe-area-inset-bottom))}
+#tray.on{transform:none}
+.tray-in{width:min(520px,100%);background:radial-gradient(ellipse at 50% 0,#3d2a1c,#1a120c 80%);border:2px solid #7a5a3a;border-bottom:0;border-radius:18px 18px 0 0;padding:12px 12px 14px;box-shadow:0 -10px 30px rgba(0,0,0,.6);text-align:center}
+.tray-title{font-family:Georgia,serif;color:var(--gold);font-size:15px}
+.tray-label{color:var(--text);font-size:13px;margin:2px 0 8px}
+.dice{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;min-height:44px;padding:10px;background:rgba(0,0,0,.35);border-radius:12px;box-shadow:inset 0 2px 10px rgba(0,0,0,.6)}
+.die{width:36px;height:36px;border-radius:8px;background:linear-gradient(160deg,#fbf6ea,#d9cdb3);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:5px;box-shadow:0 3px 0 #8f7a4f,0 4px 6px rgba(0,0,0,.5);transition:transform .2s,opacity .2s}
+.die span.pip{width:7px;height:7px;border-radius:50%;background:#2a1a10;place-self:center}
+.die.good{background:linear-gradient(160deg,#fbf6ea,#d9cdb3);box-shadow:0 0 0 2px #5fd07a,0 3px 0 #8f7a4f}
+.die.bad{opacity:.45;filter:grayscale(.6)}
+.die.blank{background:linear-gradient(160deg,#cfc6b3,#a89c84)}
+.dice.rolling .die{animation:tumble .12s infinite alternate}
+.dice.picking .die{animation:wob .6s infinite;cursor:pointer}
+@keyframes tumble{from{transform:rotate(-14deg) translateY(-3px)}to{transform:rotate(16deg) translateY(2px)}}
+@keyframes wob{50%{transform:rotate(6deg) scale(1.06)}}
+.tray-sum{margin-top:8px;font-weight:800;font-size:15px}.tray-sum.good{color:#7be08f}.tray-sum.bad{color:#ff8a7a}
+.tray-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+#toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,-150%);transition:transform .3s;z-index:70;background:#2c241e;border:1px solid var(--gold);border-radius:12px;padding:8px 14px;font-weight:700;font-size:13px;max-width:90vw;text-align:center}
+#toast.on{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="splash"><img src="icons/icon-512.png" alt=""><h1>Iron Dominion</h1><p>Kralnu Games presents · built with Claude, an AI by Anthropic</p></div>
+<div id="app"></div>
+<script>
+
+/* ============================================================================
+   IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
+   Distances are in inches; the board is a grid of 2" squares.
+   ============================================================================ */
+const GAME_VERSION = '0.1.0';
+const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
+
+/* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
+   twin (re-roll wounds), melta N (+N damage at half range), assault (may fire after advancing), pistol */
+const WEAPONS = {
+  arcPistol:   { n: 'Arc pistol', r: 12, A: 1, sk: 2, S: 5, AP: -1, D: 2, kw: { pistol: 1 } },
+  powerSword:  { n: 'Power sword', r: 0, A: 5, sk: 2, S: 5, AP: -2, D: 1, kw: {} },
+  arcCarbine:  { n: 'Arc carbine', r: 24, A: 2, sk: 3, S: 4, AP: -1, D: 1, kw: { rapid: 1 } },
+  fusionGun:   { n: 'Fusion gun', r: 12, A: 1, sk: 3, S: 9, AP: -4, D: 'D6', kw: { melta: 2, assault: 1 } },
+  combatBlade: { n: 'Combat blade', r: 0, A: 3, sk: 3, S: 4, AP: 0, D: 1, kw: {} },
+  powerMaul:   { n: 'Power maul', r: 0, A: 3, sk: 3, S: 6, AP: -1, D: 1, kw: {} },
+  scatterPistol: { n: 'Scatter pistol', r: 12, A: 1, sk: 3, S: 4, AP: 0, D: 1, kw: { pistol: 1, assault: 1 } },
+  chainblade:  { n: 'Chainblade', r: 0, A: 4, sk: 3, S: 4, AP: -1, D: 1, kw: {} },
+  twinCarbine: { n: 'Twin arc carbine', r: 24, A: 2, sk: 3, S: 4, AP: -1, D: 1, kw: { rapid: 1, twin: 1, assault: 1 } },
+  riderBlade:  { n: 'Lance blade', r: 0, A: 3, sk: 3, S: 5, AP: -1, D: 1, kw: {} },
+  assaultCannon: { n: 'Assault cannon', r: 24, A: 6, sk: 3, S: 6, AP: 0, D: 1, kw: {} },
+  powerFist:   { n: 'Siege fist', r: 0, A: 4, sk: 3, S: 12, AP: -2, D: 3, kw: {} },
+  rivetGun:    { n: 'Rivet gun', r: 18, A: 3, sk: 5, S: 6, AP: -1, D: 1, kw: {} },
+  bigCleaver:  { n: 'Gut cleaver', r: 0, A: 5, sk: 2, S: 8, AP: -2, D: 2, kw: {} },
+  scrapPistol: { n: 'Scrap pistol', r: 12, A: 1, sk: 5, S: 4, AP: 0, D: 1, kw: { pistol: 1, assault: 1 } },
+  hacker:      { n: 'Hacker', r: 0, A: 3, sk: 3, S: 4, AP: -1, D: 1, kw: {} },
+  smasher:     { n: 'Smasher', r: 0, A: 3, sk: 3, S: 6, AP: -1, D: 2, kw: {} },
+  smogThrower: { n: 'Smog thrower', r: 12, A: 'D6', sk: 0, S: 4, AP: 0, D: 1, kw: { torrent: 1, assault: 1 } },
+  twinRivets:  { n: 'Twin rivet guns', r: 18, A: 3, sk: 5, S: 6, AP: -1, D: 1, kw: { twin: 1, assault: 1 } },
+  riderHook:   { n: 'Ripper hooks', r: 0, A: 3, sk: 3, S: 5, AP: -1, D: 1, kw: {} },
+  roarCannon:  { n: 'Roar cannon', r: 36, A: 4, sk: 5, S: 7, AP: -1, D: 2, kw: { heavy: 1 } },
+  crusher:     { n: 'Crusher claws', r: 0, A: 4, sk: 4, S: 12, AP: -2, D: 3, kw: {} }
+};
+
+/* Each unit lists its models: [count, guns, melee]. Plain models die first, specialists last. */
+const UNITS = {
+  /* ---------------- THE IRONCLAD COVENANT ---------------- */
+  knightCaptain: { n: 'Knight-Captain', role: 'Leader', pts: 65, ic: '♛', M: 6, T: 4, Sv: 3, W: 5, Ld: 6, OC: 1, ward: 4,
+    models: [[1, ['arcPistol'], ['powerSword']]], rule: { id: 'rerollOnes', n: 'Lead from the Front', txt: 'Friendly units within 6" may re-roll hit rolls of 1.' } },
+  shieldbrothers: { n: 'Shieldbrothers', role: 'Core troops', pts: 85, ic: '⛨', M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 2,
+    models: [[3, ['arcCarbine'], ['combatBlade']], [1, ['fusionGun'], ['combatBlade']], [1, ['arcCarbine'], ['powerMaul']]] },
+  breachers: { n: 'Breacher Squad', role: 'Assault', pts: 80, ic: '⚔', M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 1,
+    models: [[5, ['scatterPistol'], ['chainblade']]], rule: { id: 'rerollCharge', n: 'Shock Assault', txt: 'May re-roll charge rolls.' } },
+  talonRiders: { n: 'Talon Riders', role: 'Fast attack', pts: 80, ic: '➹', M: 12, T: 5, Sv: 3, W: 3, Ld: 6, OC: 2,
+    models: [[3, ['twinCarbine'], ['riderBlade']]] },
+  ironSentinel: { n: 'Iron Sentinel', role: 'Walker', pts: 130, ic: '♜', M: 5, T: 9, Sv: 3, W: 7, Ld: 6, OC: 3, vehicle: 1,
+    models: [[1, ['assaultCannon'], ['powerFist']]] },
+  /* ---------------- THE RUST TIDE ---------------- */
+  scrapking: { n: 'Scrapking', role: 'Leader', pts: 70, ic: '♚', M: 6, T: 5, Sv: 4, W: 6, Ld: 7, OC: 1, ward: 5,
+    models: [[1, ['rivetGun'], ['bigCleaver']]], rule: { id: 'chargeAura', n: 'Fury of the Tide', txt: 'Friendly units within 6" add 1 to charge rolls.' } },
+  rustbornMob: { n: 'Rustborn Mob', role: 'Core troops', pts: 80, ic: '☗', M: 6, T: 5, Sv: 5, W: 1, Ld: 7, OC: 2,
+    models: [[9, ['scrapPistol'], ['hacker']], [1, ['scrapPistol'], ['smasher']]] },
+  smogGunners: { n: 'Smog Gunners', role: 'Specialists', pts: 65, ic: '♨', M: 6, T: 5, Sv: 4, W: 1, Ld: 7, OC: 1,
+    models: [[5, ['smogThrower'], ['hacker']]] },
+  scrapRiders: { n: 'Scrap Riders', role: 'Fast attack', pts: 85, ic: '➶', M: 10, T: 6, Sv: 4, W: 4, Ld: 7, OC: 2,
+    models: [[3, ['twinRivets'], ['riderHook']]] },
+  junkStomper: { n: 'Junk Stomper', role: 'Walker', pts: 125, ic: '♖', M: 6, T: 9, Sv: 3, W: 9, Ld: 7, OC: 3, vehicle: 1,
+    models: [[1, ['roarCannon'], ['crusher']]] }
+};
+
+const ARMIES = {
+  covenant: { n: 'The Ironclad Covenant', short: 'Covenant', col: '#9cc2f0', dark: '#1f3a66', blurb: 'Gene-forged knights: few, elite and hard to kill.',
+    rule: { n: 'Oath of Iron', txt: 'Once per battle, each unit can re-roll all its failed hit rolls for one attack.' },
+    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'] },
+  rust: { n: 'The Rust Tide', short: 'Rust Tide', col: '#d0702c', dark: '#4f6b22', blurb: 'A scrap-built horde: cheap, many and brutal up close.',
+    rule: { n: 'Rusted Fury', txt: 'Units get +1 Strength in melee on a turn they charged.' },
+    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'] }
+};
+
+/* Battlefield: rotationally symmetric so both sides get the same ground. */
+const OBJECTIVES = [[7, 10], [7, 3], [7, 17], [2, 10], [12, 10]];
+const TERRAIN = (() => {
+  const t = {};
+  const add = (type, cells) => cells.forEach(([c, r]) => { t[c + ',' + r] = type; t[(COLS - 1 - c) + ',' + (ROWS - 1 - r)] = type; });
+  add('ruin', [[3, 7], [4, 7], [3, 8], [9, 5], [10, 5], [10, 6], [0, 12], [1, 12]]);
+  add('crater', [[6, 9], [5, 11]]);
+  add('wall', [[7, 7], [12, 13], [13, 13], [2, 4], [3, 4]]);
+  return t;
+})();
+const TERRAIN_INFO = { ruin: { n: 'Ruins', cover: 1, blocks: 1 }, crater: { n: 'Crater', cover: 1, blocks: 0 }, wall: { n: 'Barricade', cover: 1, blocks: 0 } };
+
+/* ============================================================================
+   IRON DOMINION: rules engine (state, measuring, attacks) and the AI general
+   ============================================================================ */
+let G = null;
+const WP = id => WEAPONS[id];
+const UD = u => UNITS[u.def];
+const d6 = () => 1 + Math.floor(Math.random() * 6);
+const rollExpr = e => typeof e === 'number' ? e : e === 'D3' ? Math.ceil(d6() / 2) : e === 'D6+1' ? d6() + 1 : e === '2D6' ? d6() + d6() : d6();
+const avgExpr = e => typeof e === 'number' ? e : e === 'D3' ? 2 : e === 'D6+1' ? 4.5 : 3.5;
+const key = (c, r) => c + ',' + r;
+const inBoard = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS;
+const enemyOf = s => 1 - s;
+const unitsOf = s => G.units.filter(u => u.side === s && u.models.length);
+const liveUnits = () => G.units.filter(u => u.models.length);
+const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+const sqd = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+let NEXT_ID = 1;
+
+/* ---------- building armies ---------- */
+function makeUnit(def, side) {
+  const D = UNITS[def], models = [];
+  D.models.forEach(([n, guns, melee], gi) => { for (let k = 0; k < n; k++) models.push({ id: NEXT_ID++, x: -1, y: -1, w: D.W, guns: guns.slice(), melee: melee.slice(), spec: gi > 0 }); });
+  return { uid: NEXT_ID++, def, side, models, startN: models.length, moved: false, advanced: false, fellBack: false, shot: false, charged: false, fought: false, shaken: false, oath: false };
+}
+function newBattle(cfg) {
+  NEXT_ID = 1;
+  G = { cfg, round: 1, turn: 0, phase: 'command', cp: [0, 0], vp: [0, 0], players: cfg.players, units: [], log: [], over: null, first: 0, cmdUsed: [false, false], score: [[], []] };
+  cfg.players.forEach((p, s) => ARMIES[p.army].list.forEach(def => G.units.push(makeUnit(def, s))));
+  deploy(0); deploy(1);
+  G.first = G.turn = Math.random() < .5 ? 0 : 1;
+  log(`${pname(G.first)} wins the roll-off and takes the first turn.`);
+  return G;
+}
+const pname = s => G.players[s].name;
+function log(t) { G.log.push(t); if (G.log.length > 60) G.log.shift(); }
+
+/* ---------- the grid ---------- */
+function occMap() { const o = {}; for (const u of G.units) for (const m of u.models) o[key(m.x, m.y)] = { u, m }; return o; }
+function adjEnemy(c, r, side, occ, except) {
+  for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) { const h = occ[key(c + dc, r + dr)]; if (h && h.u.side !== side && h.u !== except) return true; }
+  return false;
+}
+/* place a unit's models around an anchor cell, keeping them together */
+function formation(u, anchor, ok) {
+  const occ = occMap(); for (const m of u.models) delete occ[key(m.x, m.y)];
+  const cells = [], seen = new Set([key(anchor.x, anchor.y)]), q = [anchor];
+  while (q.length && cells.length < u.models.length) {
+    const c = q.shift();
+    if (inBoard(c.x, c.y) && !occ[key(c.x, c.y)] && ok(c.x, c.y, occ)) cells.push(c);
+    else if (cells.length === 0 && !(inBoard(c.x, c.y) && !occ[key(c.x, c.y)])) { /* anchor blocked: keep searching nearby */ }
+    const nb = [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, -1], [1, -1], [-1, 1]];
+    for (const [dx, dy] of nb) { const n = { x: c.x + dx, y: c.y + dy }, k = key(n.x, n.y); if (!seen.has(k) && inBoard(n.x, n.y) && Math.hypot(n.x - anchor.x, n.y - anchor.y) <= 4) { seen.add(k); q.push(n); } }
+  }
+  if (cells.length < u.models.length) return false;
+  // keep specialists near the middle: sort models so the anchor gets model 0
+  u.models.forEach((m, i) => { m.x = cells[i].x; m.y = cells[i].y; });
+  return true;
+}
+function deploy(side) {
+  const us = G.units.filter(u => u.side === side), slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2]];
+  us.forEach((u, i) => {
+    let [c, r] = slots[i % slots.length]; if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; }
+    formation(u, { x: c, y: r }, (x, y) => side === 1 ? y <= 3 : y >= ROWS - 4);
+  });
+}
+function engagedWith(u) { const out = new Set(); for (const v of liveUnits()) if (v.side !== u.side) for (const a of u.models) for (const b of v.models) if (cheb(a, b) <= 1) out.add(v); return [...out]; }
+const engaged = u => engagedWith(u).length > 0;
+function unitDistIn(u, v) { let d = 1e9; for (const a of u.models) for (const b of v.models) d = Math.min(d, sqd(a, b)); return d * SQ; }
+/* line of sight: ruins between the two squares block it */
+function los(a, b) {
+  const n = Math.ceil(Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) * 3);
+  for (let i = 1; i < n; i++) { const t = i / n, c = Math.round(a.x + (b.x - a.x) * t), r = Math.round(a.y + (b.y - a.y) * t); if ((c !== a.x || r !== a.y) && (c !== b.x || r !== b.y) && TERRAIN[key(c, r)] === 'ruin') return false; }
+  return true;
+}
+function inCover(target, from) {
+  let n = 0;
+  for (const m of target.models) {
+    if (TERRAIN[key(m.x, m.y)]) { n++; continue; }
+    const a = from.models[0], steps = Math.ceil(sqd(a, m) * 3);
+    for (let i = 1; i < steps; i++) { const t = i / steps, c = Math.round(a.x + (m.x - a.x) * t), r = Math.round(a.y + (m.y - a.y) * t); const tt = TERRAIN[key(c, r)]; if (tt && tt !== 'ruin' && Math.hypot(c - m.x, r - m.y) <= 1.5) { n++; break; } }
+  }
+  return n * 2 >= target.models.length;
+}
+const stationary = u => !u.moved;
+
+/* ---------- objectives and scoring ---------- */
+function objControl() {
+  return OBJECTIVES.map(([c, r]) => {
+    const oc = [0, 0];
+    for (const u of liveUnits()) { if (u.shaken) continue; for (const m of u.models) if (Math.hypot(m.x - c, m.y - r) <= 1.6) oc[u.side] += UD(u).OC; }
+    return oc[0] > oc[1] ? 0 : oc[1] > oc[0] ? 1 : -1;
+  });
+}
+function scoreTurn(side) {
+  if (G.round < 2) return 0;
+  const ctl = objControl(), mine = ctl.filter(x => x === side).length, theirs = ctl.filter(x => x === enemyOf(side)).length;
+  let vp = 0; if (mine >= 1) vp += 5; if (mine >= 2) vp += 5; if (mine > theirs) vp += 5;
+  G.vp[side] += vp; G.score[side].push(vp);
+  return vp;
+}
+
+/* ---------- attack maths ---------- */
+function woundNeed(S, T) { return S >= 2 * T ? 2 : S > T ? 3 : S === T ? 4 : S * 2 <= T ? 6 : 5; }
+function saveNeed(def, AP, cover) { const D = UD(def); let sv = D.Sv - AP - (cover ? 1 : 0); sv = Math.max(2, sv); if (D.ward && D.ward < sv) sv = D.ward; return sv; }
+/* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
+function shootingGroups(att, def) {
+  const groups = {}, moved = att.advanced;
+  for (const m of att.models) for (const wid of m.guns) {
+    const w = WP(wid); if (moved && !w.kw.assault) continue;
+    let best = 1e9, seen = false;
+    for (const t of def.models) { const d = sqd(m, t) * SQ; if (d <= w.r && los(m, t)) { seen = true; best = Math.min(best, d); } }
+    if (!seen) continue;
+    const g = groups[wid] = groups[wid] || { wid, models: 0, half: true };
+    g.models++; if (best > w.r / 2) g.half = false;
+  }
+  return Object.values(groups);
+}
+function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true }; g[wid].models++; } return Object.values(g); }
+function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return liveUnits().some(v => v.side !== u.side && shootingGroups(u, v).length); }
+function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
+function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
+function canCharge(u) { return u.models.length && !u.advanced && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
+function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (UD(v).rule && UD(v).rule.id === 'chargeAura' && v !== u && unitDistIn(u, v) <= 6) b = 1; if (UD(u).rule && UD(u).rule.id === 'chargeAura') b = 1; return b; }
+const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
+function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (UD(v).rule && UD(v).rule.id === 'rerollOnes' && unitDistIn(u, v) <= 6) return true; return false; }
+/* expected damage (for the AI and the hint line) */
+function expected(att, def, melee) {
+  const groups = melee ? meleeGroups(att) : shootingGroups(att, def); let dmg = 0;
+  const T = UD(def).T, cover = !melee && inCover(def, att), Wt = UD(def).W;
+  for (const g of groups) {
+    const w = WP(g.wid); let A = avgExpr(w.A) * g.models; if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
+    const S = w.S + (melee && att.chargedNow && att.side !== undefined && G.players[att.side].army === 'rust' ? 1 : 0);
+    const pH = w.kw.torrent ? 1 : Math.min(5 / 6, Math.max(1 / 6, (7 - Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0))) / 6));
+    let pW = (7 - woundNeed(S, T)) / 6; if (w.kw.twin) pW = 1 - (1 - pW) * (1 - pW);
+    const sv = saveNeed(def, w.AP, cover), pF = sv >= 7 ? 1 : (sv - 1) / 6;
+    let D = avgExpr(w.D) + (w.kw.melta && g.half ? w.kw.melta : 0); D = Math.min(D, Wt);
+    dmg += A * pH * pW * pF * D;
+  }
+  return dmg;
+}
+
+/* ---------- resolving an attack (dice go through the Tray) ---------- */
+async function resolveAttack(att, def, melee) {
+  const groups = melee ? meleeGroups(att) : shootingGroups(att, def), cover = !melee && inCover(def, att);
+  const T = UD(def).T, rustFury = melee && att.chargedNow && G.players[att.side].army === 'rust';
+  let killed = 0;
+  for (const g of groups) {
+    if (!def.models.length) break;
+    const w = WP(g.wid);
+    let A = 0; for (let k = 0; k < g.models; k++) A += rollExpr(w.A); if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
+    const S = w.S + (rustFury ? 1 : 0), head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
+    // hit
+    let hits;
+    if (w.kw.torrent) { hits = A; await Tray.note(head, `${A} automatic hit${A === 1 ? '' : 's'} (torrent).`); }
+    else {
+      const need = Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0));
+      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${A} dice, ${need}+ to hit${w.kw.heavy && stationary(att) ? ' (heavy, stood still)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
+      hits = dice.filter(v => v >= need).length;
+    }
+    if (!hits) { log(`${head}: no hits.`); continue; }
+    // wound
+    const wn = woundNeed(S, T);
+    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${hits} dice, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin });
+    const wounds = wd.filter(v => v >= wn).length;
+    if (!wounds) { log(`${head}: ${hits} hit${hits > 1 ? 's' : ''}, no wounds.`); continue; }
+    // save (the defender rolls)
+    const sv = saveNeed(def, w.AP, cover);
+    let fails = wounds;
+    if (sv <= 6) {
+      const sd = await Tray.step({ kind: 'save', title: `${UD(def).n} save`, label: `Roll saves: ${wounds} dice, ${sv}+ to save${cover ? ' (in cover)' : ''}${UD(def).ward && UD(def).ward === sv ? ' (ward)' : ''}`, n: wounds, need: sv, side: def.side });
+      fails = sd.filter(v => v < sv).length;
+    } else await Tray.note(`${UD(def).n} save`, `No save possible against AP${w.AP}.`);
+    if (!fails) { log(`${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, all saved.`); continue; }
+    // damage
+    let dmgs = [];
+    if (typeof w.D === 'number') dmgs = Array(fails).fill(w.D);
+    else { const dd = await Tray.step({ kind: 'damage', title: head, label: `Roll damage: ${fails} × ${w.D}`, n: fails, need: 0, side: att.side, plain: true }); dmgs = dd.map(v => w.D === 'D3' ? Math.ceil(v / 2) : w.D === 'D6+1' ? v + 1 : v); }
+    if (w.kw.melta && g.half) dmgs = dmgs.map(d => d + w.kw.melta);
+    const before = def.models.length;
+    for (const d of dmgs) { if (!def.models.length) break; allocate(def, d); }
+    killed += before - def.models.length;
+    const msg = `${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, ${fails} unsaved, ${before - def.models.length} model${before - def.models.length === 1 ? '' : 's'} slain.`;
+    log(msg); await Tray.result(msg, def);
+  }
+  if (!def.models.length) { log(`${UD(def).n} is wiped out!`); Sfx.play('lose'); }
+  checkWipe();
+  return killed;
+}
+function allocate(def, dmg) {
+  // wounded models take damage first, then plain models, specialists last
+  let m = def.models.find(x => x.w < UD(def).W) || def.models.filter(x => !x.spec).slice(-1)[0] || def.models[def.models.length - 1];
+  m.w -= dmg; if (m.w <= 0) def.models.splice(def.models.indexOf(m), 1);
+}
+function checkWipe() {
+  if (G.over) return;
+  const a = unitsOf(0).length, b = unitsOf(1).length;
+  if (!a || !b) G.over = { winner: !a && !b ? -1 : a ? 0 : 1, why: 'wipe' };
+}
+
+/* ---------- moving ---------- */
+function reachable(u, mode, adv = 0) {
+  const a = u.models[0], range = (UD(u).M + adv) / SQ, occ = occMap(), out = new Set();
+  for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
+    if (Math.hypot(c - a.x, r - a.y) > range + .01) continue;
+    const h = occ[key(c, r)]; if (h && h.u !== u) continue;
+    if (adjEnemy(c, r, u.side, occ)) continue;
+    out.add(key(c, r));
+  }
+  return out;
+}
+function moveUnit(u, c, r) {
+  const save = u.models.map(m => [m.x, m.y]);
+  const ok = formation(u, { x: c, y: r }, (x, y, occ) => !adjEnemy(x, y, u.side, occ));
+  if (!ok) { u.models.forEach((m, i) => { m.x = save[i][0]; m.y = save[i][1]; }); return false; }
+  return true;
+}
+function chargeMove(u, v, roll) {
+  const occ = occMap(); for (const m of u.models) delete occ[key(m.x, m.y)];
+  const reach = roll / SQ + .5;
+  // best spot next to the target that the leading model can reach
+  let best = null;
+  for (const t of v.models) for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) {
+    const c = t.x + dc, r = t.y + dr; if (!inBoard(c, r) || occ[key(c, r)]) continue;
+    const d = Math.min(...u.models.map(m => Math.hypot(m.x - c, m.y - r)));
+    if (d <= reach && (!best || d < best.d)) best = { x: c, y: r, d };
+  }
+  if (!best) return false;
+  return formation(u, best, (x, y, o) => { for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) { const h = o[key(x + dc, y + dr)]; if (h && h.u.side !== u.side && h.u !== v) return false; } return true; });
+}
+
+/* ---------- the AI general ---------- */
+const AI = {
+  noise() { return G.cfg.diff === 'easy' ? Math.random() * 6 : G.cfg.diff === 'hard' ? 0 : Math.random() * 1.5; },
+  isMelee(u) { const fake = { models: [{ x: 0, y: 0 }] }; let m = 0, r = 0; for (const g of meleeGroups(u)) { const w = WP(g.wid); m += avgExpr(w.A) * g.models * w.S * avgExpr(w.D); } for (const md of u.models) for (const wid of md.guns) { const w = WP(wid); r += avgExpr(w.A) * w.S * avgExpr(w.D) * (w.kw.torrent ? 1.5 : 1); } return m > r * 1.3; },
+  maxRange(u) { let r = 0; for (const m of u.models) for (const wid of m.guns) r = Math.max(r, WP(wid).r); return r; },
+  cellScore(u, c, r, side) {
+    const ctl = objControl(), melee = AI.isMelee(u), oc = UD(u).OC * u.models.length;
+    let s = 0;
+    OBJECTIVES.forEach(([oc0, or0], i) => {
+      const d = Math.hypot(c - oc0, r - or0);
+      const want = ctl[i] === side ? 3 : ctl[i] === -1 ? 9 : 11;
+      if (d <= 1.6) s += want + Math.min(6, oc * .5); else s -= d * (melee ? .15 : .35) * (want / 9);
+    });
+    const enemies = unitsOf(enemyOf(side)); let nearest = 1e9;
+    for (const v of enemies) for (const m of v.models) nearest = Math.min(nearest, Math.hypot(m.x - c, m.y - r) * SQ);
+    if (melee) s -= nearest * .35;
+    else { const R = AI.maxRange(u); if (nearest <= R) s += 4; else s -= (nearest - R) * .25; if (nearest < 6 && !UD(u).vehicle) s -= 3; }
+    if (TERRAIN[key(c, r)] && TERRAIN[key(c, r)] !== 'ruin') s += 1.5; else if (TERRAIN[key(c, r)] === 'ruin') s += 2;
+    return s;
+  },
+  bestMove(u, adv) {
+    const R = reachable(u, 'move', adv); let best = null;
+    for (const k of R) { const [c, r] = k.split(',').map(Number); const s = AI.cellScore(u, c, r, u.side) + AI.noise(); if (!best || s > best.s) best = { c, r, s }; }
+    return best;
+  },
+  pickShot(u) {
+    let best = null;
+    for (const v of shootTargets(u)) {
+      let s = expected(u, v, false); const left = v.models.reduce((a, m) => a + m.w, 0);
+      s *= UD(v).pts / (UD(v).W * v.startN);
+      if (s * 1.2 >= left * UD(v).pts / (UD(v).W * v.startN)) s += 3;
+      if (objControl().some((x, i) => x !== u.side && v.models.some(m => Math.hypot(m.x - OBJECTIVES[i][0], m.y - OBJECTIVES[i][1]) <= 1.6))) s *= 1.4;
+      s += AI.noise() * .3;
+      if (!best || s > best.s) best = { v, s };
+    }
+    return best && best.s > .05 ? best.v : null;
+  },
+  chargeOdds(need, bonus, reroll) { let p = 0; for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) if (a + b + bonus >= need) p++; p /= 36; return reroll ? 1 - (1 - p) * (1 - p) : p; },
+  pickCharge(u) {
+    let best = null;
+    for (const v of chargeTargets(u)) {
+      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), UD(u).rule && UD(u).rule.id === 'rerollCharge');
+      const gain = expected(u, v, true) - expected(v, u, true) * .5;
+      const s = p * gain + (AI.isMelee(u) ? 1.5 : -1) + AI.noise() * .2;
+      if (p > .25 && (!best || s > best.s)) best = { v, s };
+    }
+    return best && best.s > .8 ? best.v : null;
+  },
+  pickFight(u) { let best = null; for (const v of engagedWith(u)) { const s = expected(u, v, true); if (!best || s > best.s) best = { v, s }; } return best ? best.v : null; }
+};
+
+/* ============================================================================
+   IRON DOMINION: the dice tray, the battlefield view and the turn flow
+   ============================================================================ */
+const sleep = ms => new Promise(r => setTimeout(r, ms * (window.SPEED_MUL ?? 1)));
+const isAI = s => G.players[s].type === 'ai';
+
+/* ---------- the hands-on dice tray ---------- */
+const Tray = {
+  headless: false, el: null,
+  quick() { return this.headless || Settings.quick; },
+  rollN(n) { return Array.from({ length: n }, d6); },
+  die(v, cls = '', i = -1) {
+    const P = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] }[v] || [];
+    return `<div class="die ${cls}" ${i >= 0 ? `data-i="${i}"` : ''}>${Array.from({ length: 9 }, (_, k) => `<span class="${P.includes(k) ? 'pip' : ''}"></span>`).join('')}</div>`;
+  },
+  open(html) {
+    if (!this.el) { this.el = document.createElement('div'); this.el.id = 'tray'; document.body.appendChild(this.el); }
+    this.el.innerHTML = `<div class="tray-in">${html}</div>`; this.el.classList.add('on');
+  },
+  close() { if (this.el) this.el.classList.remove('on'); },
+  autoPolicy(o, d) { // rerolls the AI (or quick dice) takes on its own
+    const fail = v => o.need ? v < o.need : false;
+    if (o.kind === 'save') return d;
+    if (o.rrFails) d = d.map(v => fail(v) ? d6() : v);
+    else if (o.rrOnes) d = d.map(v => v === 1 ? d6() : v);
+    if (o.oath && d.filter(fail).length > d.length / 2) { o.oath.oath = true; d = d.map(v => fail(v) ? d6() : v); }
+    if (o.sum && o.rrAll && d.reduce((a, b) => a + b, 0) + (o.bonus || 0) < o.need) d = this.rollN(d.length);
+    return d;
+  },
+  async step(o) {
+    if (!o.n) return [];
+    let d = this.rollN(o.n);
+    if (this.quick() || isAI(o.side)) {
+      d = this.autoPolicy(o, d);
+      if (this.quick()) return d;
+      await this.show(o, d, true);
+      return d;
+    }
+    return this.interactive(o);
+  },
+  ok(o, v) { return o.plain ? true : o.kind === 'save' ? v >= o.need : v >= o.need; },
+  sumLine(o, d) { const s = d.reduce((a, b) => a + b, 0) + (o.bonus || 0); return `<div class="tray-sum ${s >= o.need ? 'good' : 'bad'}">${s}${o.bonus ? ` (incl. +${o.bonus})` : ''} ${s >= o.need ? '✔' : '✘'} needs ${o.need}</div>`; },
+  async show(o, d, auto) { // the AI rolling in front of you
+    Sfx.play('dice');
+    this.open(`<div class="tray-title">${o.title}</div><div class="tray-label">${G.players[o.side].name} rolls · ${o.label}</div><div class="dice rolling">${d.map(() => this.die(d6())).join('')}</div>`);
+    await this.tumble(d);
+    const html = d.map(v => this.die(v, o.sum || o.plain ? '' : this.ok(o, v) ? 'good' : 'bad')).join('');
+    this.el.querySelector('.dice').classList.remove('rolling'); this.el.querySelector('.dice').innerHTML = html;
+    if (o.sum) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', this.sumLine(o, d));
+    else if (!o.plain) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', `<div class="tray-sum">${d.filter(v => this.ok(o, v)).length} of ${d.length} ${o.kind === 'save' ? 'saved' : 'succeed'}</div>`);
+    await this.waitTap(Settings.fast ? 700 : 1500);
+  },
+  async tumble(d) { const box = this.el.querySelector('.dice'); for (let k = 0; k < 6; k++) { box.innerHTML = d.map(() => this.die(d6())).join(''); await sleep(55); } },
+  waitTap(ms) { return new Promise(res => { let done = false; const go = () => { if (done) return; done = true; this.el.removeEventListener('click', go); res(); }; this.el.addEventListener('click', go); setTimeout(go, ms); }); },
+  interactive(o) {
+    return new Promise(res => {
+      let d = Array(o.n).fill(0), rolled = false, swept = false, usedOnes = false, usedFails = false, picking = false, cmdUsed = G.cmdUsed[o.side];
+      const fail = v => o.plain || o.sum ? false : !this.ok(o, v);
+      const draw = () => {
+        const btns = [];
+        if (!rolled) btns.push(`<button class="b gold big" data-a="roll">🎲 Roll ${o.n} ${o.n === 1 ? 'die' : 'dice'}</button>`);
+        else if (!swept) {
+          if (o.rrOnes && !usedOnes && d.some(v => v === 1)) btns.push(`<button class="b" data-a="ones">↻ Re-roll 1s</button>`);
+          if (o.rrFails && !usedFails && d.some(fail)) btns.push(`<button class="b" data-a="fails">↻ Re-roll fails</button>`);
+          if (o.oath && !o.oath.oath && d.some(fail)) btns.push(`<button class="b" data-a="oath">⚜ Oath of Iron: re-roll fails</button>`);
+          if (o.sum && o.rrAll && !usedFails) btns.push(`<button class="b" data-a="all">↻ Re-roll the charge</button>`);
+          if (!cmdUsed && G.cp[o.side] >= 1) btns.push(`<button class="b ${picking ? 'gold' : ''}" data-a="cmd">${picking ? 'Tap a die to re-roll' : '✦ Command re-roll (1 CP)'}</button>`);
+          if (o.sum || o.plain) btns.push(`<button class="b gold" data-a="done">Continue →</button>`);
+          else btns.push(`<button class="b gold" data-a="sweep">${o.kind === 'save' ? '🧹 Clear saved dice' : '🧹 Sweep away misses'}</button>`);
+        } else btns.push(`<button class="b gold big" data-a="done">Continue →</button>`);
+        const shown = d.map((v, i) => [v, i]).filter(([v]) => !swept || (o.kind === 'save' ? !this.ok(o, v) : this.ok(o, v)));
+        const n = shown.length;
+        const after = swept ? `<div class="tray-sum ${n ? 'good' : 'bad'}">${o.kind === 'save' ? `${n} unsaved` : `${n} ${o.kind === 'hit' ? 'hit' : 'wound'}${n === 1 ? '' : 's'}`}</div>` : '';
+        this.open(`<div class="tray-title">${o.title}</div><div class="tray-label">${G.players[o.side].name} · ${o.label}</div>
+          <div class="dice ${picking ? 'picking' : ''}">${shown.map(([v, i]) => rolled ? this.die(v, o.sum || o.plain ? '' : fail(v) ? 'bad' : 'good', i) : this.die(0, 'blank', i)).join('')}</div>
+          ${rolled && o.sum ? this.sumLine(o, d) : ''}${after}<div class="tray-btns">${btns.join('')}</div>`);
+        this.el.querySelectorAll('[data-a]').forEach(b => b.onclick = e => { e.stopPropagation(); act(b.dataset.a); });
+        if (picking) this.el.querySelectorAll('.die[data-i]').forEach(x => x.onclick = e => { e.stopPropagation(); const i = +x.dataset.i; d[i] = d6(); G.cp[o.side]--; G.cmdUsed[o.side] = true; cmdUsed = true; picking = false; Sfx.play('dice'); draw(); Battle.render(); });
+      };
+      const reroll = async (pred) => { const idx = d.map((v, i) => pred(v) ? i : -1).filter(i => i >= 0); Sfx.play('dice'); for (let k = 0; k < 5; k++) { idx.forEach(i => d[i] = d6()); draw(); await sleep(50); } idx.forEach(i => d[i] = d6()); draw(); };
+      const act = async a => {
+        if (a === 'roll') { rolled = true; Sfx.play('dice'); this.open(`<div class="tray-title">${o.title}</div><div class="dice rolling">${d.map(() => this.die(d6())).join('')}</div>`); await this.tumble(d); d = this.rollN(o.n); draw(); }
+        else if (a === 'ones') { usedOnes = true; await reroll(v => v === 1); }
+        else if (a === 'fails') { usedFails = true; await reroll(fail); }
+        else if (a === 'oath') { o.oath.oath = true; await reroll(fail); }
+        else if (a === 'all') { usedFails = true; await reroll(() => true); }
+        else if (a === 'cmd') { picking = !picking; draw(); }
+        else if (a === 'sweep') { swept = true; Sfx.play('sweep'); draw(); }
+        else if (a === 'done') { res(d); }
+      };
+      draw();
+    });
+  },
+  async note(title, text) { if (this.quick()) return; this.open(`<div class="tray-title">${title}</div><div class="tray-label">${text}</div>`); await this.waitTap(Settings.fast ? 600 : 1200); },
+  async result(msg) { if (this.quick()) return; this.open(`<div class="tray-title">Result</div><div class="tray-label">${msg}</div>`); Sfx.play('hit'); await this.waitTap(Settings.fast ? 700 : 1400); this.close(); }
+};
+
+/* ---------- battlefield view and turn flow ---------- */
+const Battle = {
+  root: null, ui: { sel: null, mode: null, reach: null, targets: null }, endPhase: null, sid: 0,
+  start(cfg) { newBattle(cfg); this.sid++; this.ui = {}; Tray.close(); this.render(); this.loop(this.sid); },
+  resume(state) { G = state; NEXT_ID = Math.max(...G.units.flatMap(u => [u.uid, ...u.models.map(m => m.id)])) + 1; this.sid++; this.ui = {}; this.render(); this.loop(this.sid, true); },
+  alive(my) { if (my !== this.sid) throw 'abort'; },
+  async loop(my, resumed) {
+    try {
+      let skipStart = resumed;
+      while (!G.over) {
+        await this.playerTurn(G.turn, my, skipStart); skipStart = false; this.alive(my);
+        if (G.over) break;
+        const vp = scoreTurn(G.turn); if (vp) { log(`${pname(G.turn)} scores ${vp} VP from objectives.`); toast(`${pname(G.turn)} scores ${vp} VP`); }
+        if (G.turn !== G.first) { if (G.round >= 5) { G.over = { winner: G.vp[0] > G.vp[1] ? 0 : G.vp[1] > G.vp[0] ? 1 : -1, why: 'vp' }; break; } G.round++; }
+        G.turn = enemyOf(G.turn); this.render();
+      }
+      this.finish();
+    } catch (e) { if (e !== 'abort') console.error(e); }
+  },
+  async playerTurn(s, my, resumed) {
+    if (!resumed) {
+      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false });
+      for (const u of unitsOf(enemyOf(s))) Object.assign(u, { chargedNow: false, fought: false });
+      G.phase = 'command'; G.cp[0]++; G.cp[1]++; G.cmdUsed = [false, false];
+      this.banner(`Round ${G.round} · ${pname(s)}`, 'Command phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
+      for (const u of unitsOf(s)) {
+        u.shaken = false;
+        const D = UD(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= D.W;
+        if (!below) continue;
+        const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${D.Ld}+`, n: 2, need: D.Ld, side: s }); this.alive(my);
+        const t = d[0] + d[1]; if (t < D.Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
+      }
+      Tray.close();
+    }
+    if (isAI(s)) {
+      await this.aiTurn(s, my);
+    } else {
+      if (!resumed || G.phase === 'command') G.phase = 'move';
+      const order = ['move', 'shoot', 'charge'];
+      for (let k = order.indexOf(G.phase); k < 3 && !G.over; k++) {
+        G.phase = order[k]; this.ui = {}; this.banner(`${pname(s)}`, { move: 'Movement phase', shoot: 'Shooting phase', charge: 'Charge phase' }[G.phase]);
+        Shell.save(); this.render();
+        await new Promise(r => this.endPhase = r); this.alive(my);
+      }
+    }
+    if (!G.over) await this.fightPhase(s, my);
+  },
+  async aiTurn(s, my) {
+    const pause = async ms => { this.render(); await sleep(Settings.fast ? ms * .4 : ms); this.alive(my); };
+    G.phase = 'move'; this.banner(pname(s), 'Movement phase'); await pause(500);
+    for (const u of unitsOf(s)) {
+      if (engaged(u)) { if (!AI.isMelee(u) && expected(engagedWith(u)[0], u, true) > expected(u, engagedWith(u)[0], true)) { const b = AI.bestMove(u, 0); if (b) { moveUnit(u, b.c, b.r); u.fellBack = true; u.moved = true; log(`${UD(u).n} falls back.`); await pause(500); } } continue; }
+      let adv = 0;
+      if (AI.isMelee(u)) { const near = Math.min(...unitsOf(enemyOf(s)).map(v => unitDistIn(u, v))); if (near > UD(u).M + 9) { adv = d6(); u.advanced = true; } }
+      const b = AI.bestMove(u, adv);
+      if (b && (b.c !== u.models[0].x || b.r !== u.models[0].y)) { moveUnit(u, b.c, b.r); u.moved = true; if (adv) log(`${UD(u).n} advances ${adv}".`); this.ui.flash = u.uid; await pause(450); }
+    }
+    this.ui.flash = null;
+    G.phase = 'shoot'; this.banner(pname(s), 'Shooting phase'); await pause(500);
+    for (const u of unitsOf(s)) { if (!canShoot(u)) continue; const v = AI.pickShot(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; this.render(); Sfx.play('shot'); await resolveAttack(u, v, false); u.shot = true; this.alive(my); Tray.close(); await pause(300); if (G.over) return; }
+    G.phase = 'charge'; this.ui = {}; this.banner(pname(s), 'Charge phase'); await pause(500);
+    for (const u of unitsOf(s)) { if (!canCharge(u)) continue; const v = AI.pickCharge(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; await this.doCharge(u, v, my); await pause(400); }
+    this.ui = {};
+  },
+  async doCharge(u, v, my) {
+    const need = chargeNeed(u, v), bonus = chargeBonus(u);
+    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +1' : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: !!(UD(u).rule && UD(u).rule.id === 'rerollCharge') });
+    this.alive(my); Tray.close();
+    u.charged = true;
+    const roll = d[0] + d[1] + bonus;
+    if (roll >= need && chargeMove(u, v, roll)) { u.chargedNow = true; u.moved = true; log(`${UD(u).n} charges into ${UD(v).n} (rolled ${roll}).`); Sfx.play('charge'); toast(`${UD(u).n} charges home!`); }
+    else { log(`${UD(u).n} fails the charge (rolled ${roll}, needed ${need}).`); toast('Charge failed'); }
+    this.render();
+  },
+  async fightPhase(s, my) {
+    G.phase = 'fight'; this.ui = {};
+    const queue = () => liveUnits().filter(u => !u.fought && engaged(u));
+    if (!queue().length) return;
+    this.banner(pname(s), 'Fight phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
+    let side = s, guard = 0;
+    while (queue().length && guard++ < 40 && !G.over) {
+      const q = queue(), chargers = q.filter(u => u.chargedNow && u.side === s);
+      let u = chargers[0] || q.find(x => x.side === side) || q[0];
+      let v;
+      if (!isAI(u.side) && engagedWith(u).length > 1) v = await this.pickTarget(u, engagedWith(u), `${UD(u).n} fights: tap the enemy to attack`);
+      else v = AI.pickFight(u) || engagedWith(u)[0];
+      this.alive(my);
+      if (v) { this.ui = { sel: u.uid, aim: v.uid }; this.render(); Sfx.play('clash'); await resolveAttack(u, v, true); this.alive(my); Tray.close(); }
+      u.fought = true; side = enemyOf(u.side); this.render();
+    }
+    this.ui = {};
+  },
+  pickTarget(u, list, msg) {
+    return new Promise(res => { this.ui = { sel: u.uid, mode: 'pick', targets: new Set(list.map(v => v.uid)), pickRes: res, msg }; this.render(); });
+  },
+  finish() {
+    Tray.close(); this.render(); Shell.clearSave();
+    const o = G.over, w = o.winner, human = G.players.findIndex(p => p.type === 'human');
+    const title = w === -1 ? 'A bloody stalemate' : G.players.every(p => p.type === 'human') ? `${pname(w)} is victorious!` : w === human ? 'Victory!' : 'Defeat';
+    Sfx.play(w === human || (w >= 0 && G.players[w].type === 'human') ? 'win' : 'lose');
+    Shell.endScreen(title, `${o.why === 'wipe' ? 'An army was wiped out.' : 'Five battle rounds are over.'}<br>${pname(0)} ${G.vp[0]} VP · ${pname(1)} ${G.vp[1]} VP`);
+  },
+  /* ---------- player input ---------- */
+  mySide() { return isAI(G.turn) ? null : G.turn; },
+  tapCell(c, r) {
+    if (!G || G.over) return;
+    const h = occMap()[key(c, r)], ui = this.ui;
+    if (ui.mode === 'pick') { if (h && ui.targets.has(h.u.uid)) { const res = ui.pickRes; this.ui = {}; res(h.u); } return; }
+    const s = this.mySide(); if (s === null || G.phase === 'fight' || G.phase === 'command') { if (h) { this.ui.view = h.u.uid; this.render(); } return; }
+    if ((ui.mode === 'move' || ui.mode === 'advance' || ui.mode === 'fallback') && ui.reach.has(key(c, r)) && (!h || h.u.uid === ui.sel)) {
+      const u = this.unit(ui.sel);
+      if (moveUnit(u, c, r)) { u.moved = true; u.mvDone = true; if (ui.mode === 'fallback') u.fellBack = true; if (ui.mode === 'advance') u.advanced = true; Sfx.play('move'); log(`${UD(u).n} ${ui.mode === 'advance' ? 'advances' : ui.mode === 'fallback' ? 'falls back' : 'moves'}.`); }
+      else toast('Not enough room there.');
+      this.ui = { sel: u.uid }; this.render(); return;
+    }
+    if ((ui.mode === 'shoot' || ui.mode === 'charge') && h && ui.targets.has(h.u.uid)) { this.fire(h.u); return; }
+    if (h) { this.ui = { sel: h.u.side === s ? h.u.uid : null, view: h.u.uid }; Sfx.play('tap'); this.render(); }
+    else { this.ui = {}; this.render(); }
+  },
+  unit(uid) { return G.units.find(u => u.uid === uid); },
+  async act(a) {
+    const u = this.unit(this.ui.sel), my = this.sid;
+    if (a === 'end') { const r = this.endPhase; this.endPhase = null; this.ui = {}; if (r) r(); return; }
+    if (!u) return;
+    if (a === 'move' || a === 'fallback') { this.ui = { sel: u.uid, mode: a, reach: reachable(u, a, 0) }; }
+    else if (a === 'advance') { const d = await Tray.step({ kind: 'adv', plain: true, title: `${UD(u).n} advances`, label: 'Roll 1D6 for extra inches', n: 1, need: 0, side: u.side }); if (my !== this.sid) return; Tray.close(); this.ui = { sel: u.uid, mode: 'advance', reach: reachable(u, 'advance', d[0]), adv: d[0] }; toast(`+${d[0]}" this move. No shooting (except assault weapons) or charging.`); }
+    else if (a === 'hold') { u.mvDone = true; this.ui = {}; }
+    else if (a === 'shoot') { this.ui = { sel: u.uid, mode: 'shoot', targets: new Set(shootTargets(u).map(v => v.uid)) }; }
+    else if (a === 'charge') { this.ui = { sel: u.uid, mode: 'charge', targets: new Set(chargeTargets(u).map(v => v.uid)) }; }
+    else if (a === 'cancel') { this.ui = { sel: u.uid }; }
+    this.render();
+  },
+  async fire(v) {
+    const u = this.unit(this.ui.sel), my = this.sid, mode = this.ui.mode; this.ui = { sel: u.uid, aim: v.uid }; this.render();
+    try {
+      if (mode === 'shoot') { Sfx.play('shot'); await resolveAttack(u, v, false); this.alive(my); u.shot = true; Tray.close(); }
+      else await this.doCharge(u, v, my);
+    } catch (e) { if (e !== 'abort') console.error(e); return; }
+    this.ui = {}; this.render();
+    if (G.over && this.endPhase) this.act('end');
+  },
+  banner(a, b) { this.bannerText = [a, b]; const el = document.getElementById('bf-banner'); if (el) { el.innerHTML = `<b>${a}</b><span>${b}</span>`; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); } },
+  /* ---------- drawing ---------- */
+  render() {
+    const root = this.root; if (!root || !G) return;
+    const W = Math.min(520, root.clientWidth || 380), cell = Math.floor(W / COLS), ui = this.ui, ctl = objControl();
+    const col = s => ARMIES[G.players[s].army].col, dark = s => ARMIES[G.players[s].army].dark;
+    let tiles = '';
+    for (const [k, t] of Object.entries(TERRAIN)) { const [c, r] = k.split(',').map(Number); tiles += `<div class="terr t-${t}" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px"></div>`; }
+    if (ui.reach) for (const k of ui.reach) { const [c, r] = k.split(',').map(Number); tiles += `<div class="reach" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px"></div>`; }
+    const objs = OBJECTIVES.map(([c, r], i) => `<div class="obj" style="left:${(c - 1.1) * cell}px;top:${(r - 1.1) * cell}px;width:${cell * 3.2}px;height:${cell * 3.2}px;border-color:${ctl[i] >= 0 ? col(ctl[i]) : 'rgba(255,255,255,.35)'};background:${ctl[i] >= 0 ? col(ctl[i]) + '22' : 'transparent'}"><span style="background:${ctl[i] >= 0 ? col(ctl[i]) : '#777'}">${i + 1}</span></div>`).join('');
+    const models = liveUnits().map(u => {
+      const D = UD(u), sel = ui.sel === u.uid, tgt = ui.targets && ui.targets.has(u.uid), aim = ui.aim === u.uid, view = ui.view === u.uid, fl = ui.flash === u.uid;
+      return u.models.map((m, i) => `<div class="mdl ${D.vehicle ? 'veh' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${aim ? 'aim' : ''} ${view && !sel ? 'view' : ''} ${fl ? 'fl' : ''} ${u.shaken ? 'shk' : ''}" style="left:${m.x * cell + cell * .08}px;top:${m.y * cell + cell * .08}px;width:${cell * .84}px;height:${cell * .84}px;background:radial-gradient(circle at 35% 30%,${col(u.side)},${dark(u.side)});font-size:${cell * .48}px">${i === 0 || D.vehicle ? D.ic : ''}${m.w < D.W ? `<i class="wd">${m.w}</i>` : ''}</div>`).join('');
+    }).join('');
+    const s = this.mySide(), u = this.unit(ui.sel), vu = this.unit(ui.view || ui.sel);
+    root.innerHTML = `
+      <div class="hud">
+        <div class="side s0" style="--c:${col(0)}"><b>${pname(0)}</b><span>${G.vp[0]} VP · ${G.cp[0]} CP</span></div>
+        <div class="rnd"><b>Round ${G.round}/5</b><span>${{ command: 'Command', move: 'Movement', shoot: 'Shooting', charge: 'Charge', fight: 'Fight' }[G.phase] || ''}</span></div>
+        <div class="side s1" style="--c:${col(1)}"><b>${pname(1)}</b><span>${G.vp[1]} VP · ${G.cp[1]} CP</span></div>
+      </div>
+      <div class="board-wrap"><div id="board" class="board" style="width:${cell * COLS}px;height:${cell * ROWS}px;background-size:${cell}px ${cell}px">${tiles}${objs}${models}<div id="bf-banner" class="banner">${this.bannerText ? `<b>${this.bannerText[0]}</b><span>${this.bannerText[1]}</span>` : ''}</div></div></div>
+      <div class="panel">${this.panelHtml(s, u, vu)}</div>`;
+    const b = root.querySelector('#board');
+    b.onclick = e => { const r = b.getBoundingClientRect(); this.tapCell(Math.floor((e.clientX - r.left) / cell), Math.floor((e.clientY - r.top) / cell)); };
+    root.querySelectorAll('[data-act]').forEach(x => x.onclick = () => this.act(x.dataset.act));
+  },
+  unitCard(u) {
+    if (!u) return '';
+    const D = UD(u), ws = {};
+    u.models.forEach(m => m.guns.concat(m.melee).forEach(w => ws[w] = (ws[w] || 0) + 1));
+    const wl = Object.entries(ws).map(([w, n]) => { const x = WP(w); return `<div class="wl"><b>${n > 1 ? n + '× ' : ''}${x.n}</b> <span>${x.r ? x.r + '"' : 'Melee'} · A${x.A} · ${x.kw.torrent ? 'auto' : x.sk + '+'} · S${x.S} · AP${x.AP} · D${x.D}${Object.keys(x.kw).length ? ' · ' + Object.keys(x.kw).join(', ') : ''}</span></div>`; }).join('');
+    const flags = [u.shaken && 'Shaken', u.moved && (u.advanced ? 'Advanced' : u.fellBack ? 'Fell back' : 'Moved'), u.shot && 'Shot', u.chargedNow && 'Charged', engaged(u) && 'In combat'].filter(Boolean);
+    return `<div class="card"><div class="card-h"><b style="color:${ARMIES[G.players[u.side].army].col}">${D.ic} ${D.n}</b><span>${u.models.length}/${u.startN} models · ${D.role}</span></div>
+      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? D.M + '"' : k === 'Sv' || k === 'Ld' ? D[k] + '+' : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
+      ${wl}${D.rule ? `<div class="rule"><b>${D.rule.n}:</b> ${D.rule.txt}</div>` : ''}${flags.length ? `<div class="flags">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}</div>`;
+  },
+  panelHtml(s, u, vu) {
+    const ui = this.ui, B = (a, t, cls = '') => `<button class="b ${cls}" data-act="${a}">${t}</button>`;
+    if (G.over) return `<div class="msg">The battle is over.</div>`;
+    if (ui.mode === 'pick') return `<div class="msg">${ui.msg}</div>`;
+    if (s === null) return `<div class="msg">${pname(G.turn)} is ${{ move: 'moving', shoot: 'shooting', charge: 'charging', fight: 'fighting', command: 'giving orders' }[G.phase] || 'thinking'}…</div>${this.unitCard(vu)}`;
+    if (G.phase === 'fight' || G.phase === 'command') return `<div class="msg">${G.phase === 'fight' ? 'Combat is being resolved…' : 'Command phase'}</div>${this.unitCard(vu)}`;
+    let act = '', hint = '';
+    const phaseHint = { move: 'Tap one of your units, then choose how it moves.', shoot: 'Tap a unit that can shoot, then tap Shoot and pick a target.', charge: 'Tap a unit within 12" of the enemy to charge.' }[G.phase];
+    if (u && u.side === s) {
+      if (ui.mode && ui.mode !== 'pick') { hint = ui.mode === 'shoot' ? 'Tap a glowing enemy unit to shoot it.' : ui.mode === 'charge' ? 'Tap a glowing enemy unit to charge it.' : 'Tap a highlighted square to move there.'; act = B('cancel', 'Cancel'); }
+      else if (G.phase === 'move') {
+        if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
+        else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
+        else act = B('move', `➜ Move ${UD(u).M}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
+      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🎯 Shoot', 'gold'); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
+      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold'); else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
+    } else hint = phaseHint;
+    const next = { move: 'End movement →', shoot: 'End shooting →', charge: 'End charges → Fight' }[G.phase];
+    return `${hint ? `<div class="msg">${hint}</div>` : ''}<div class="acts">${act}${B('end', next, 'end')}</div>${this.unitCard(vu)}`;
+  }
+};
+function toast(t) { let el = document.getElementById('toast'); if (!el) { el = document.createElement('div'); el.id = 'toast'; document.body.appendChild(el); } el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2200); }
+
+/* ============================================================================
+   IRON DOMINION: settings, sound, menus, saves (the Kralnu Standard shell)
+   ============================================================================ */
+const Store = { get(k, d) { try { const v = localStorage.getItem('idom_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('idom_' + k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem('idom_' + k); } catch (e) {} } };
+const Settings = Object.assign({ music: 35, sfx: 70, quick: false, fast: false, diff: 'normal' }, Store.get('settings', {}));
+const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
+const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
+const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
+const CHANGES = [
+  ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
+];
+
+/* ---------- sound: synthesised, no audio files ---------- */
+const Sfx = (() => {
+  let ctx = null, out = null, mus = null, musT = null, noise = null;
+  function ensure() {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); out = ctx.createGain(); out.connect(ctx.destination); mus = ctx.createGain(); mus.connect(ctx.destination); const b = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; noise = b; apply(); } catch (e) { return null; } }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+  function apply() { if (!ctx) return; out.gain.value = Settings.sfx / 100 * .8; mus.gain.value = Settings.music / 100 * .25; if (Settings.music > 0) startMusic(); else stopMusic(); }
+  function tone(f, dur, type = 'sine', vol = .5, when = 0, slide = 0, dest) { const t = ctx.currentTime + when, o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + dur); o.connect(g); g.connect(dest || out); o.start(t); o.stop(t + dur + .05); }
+  function burst(dur, cut, vol = .6, when = 0) { const t = ctx.currentTime + when, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(); s.buffer = noise; f.type = 'lowpass'; f.frequency.value = cut; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur); s.connect(f); f.connect(g); g.connect(out); s.start(t, Math.random() * .5); s.stop(t + dur + .05); }
+  const S = {
+    tap() { tone(700, .05, 'sine', .2); }, move() { burst(.08, 900, .4); tone(120, .1, 'triangle', .25); },
+    dice() { for (let i = 0; i < 7; i++) burst(.04, 3000, .5 - i * .05, i * .05 + Math.random() * .03); }, sweep() { burst(.25, 1800, .25); },
+    shot() { for (let i = 0; i < 3; i++) { burst(.06, 2500, .5, i * .09); tone(180, .08, 'square', .12, i * .09, 60); } },
+    charge() { tone(110, .5, 'sawtooth', .18, 0, 70); burst(.4, 600, .3); }, clash() { for (let i = 0; i < 3; i++) { tone(1400 + Math.random() * 600, .09, 'triangle', .18, i * .12); burst(.05, 4000, .3, i * .12); } },
+    hit() { tone(90, .25, 'sine', .5, 0, 45); burst(.1, 700, .4); }, win() { [262, 330, 392, 523].forEach((f, i) => tone(f, .6, 'sawtooth', .12, i * .18)); }, lose() { [220, 196, 147].forEach((f, i) => tone(f, .7, 'sawtooth', .12, i * .25)); }
+  };
+  function startMusic() { if (musT || !ctx) return; let n = 0; const chords = [[55, 82.4, 110], [49, 73.4, 98], [41.2, 61.7, 82.4], [46.2, 69.3, 92.5]]; const step = () => { if (Settings.music <= 0 || document.hidden) return; const c = chords[n++ % 4]; c.forEach(f => tone(f, 5.5, 'sawtooth', .07, 0, 0, mus)); tone(c[2] * 4, 1.2, 'sine', .04, Math.random() * 3, 0, mus); }; step(); musT = setInterval(step, 5200); }
+  function stopMusic() { clearInterval(musT); musT = null; }
+  return { play(n) { if (!Settings.sfx || !ensure()) return; try { S[n] && S[n](); } catch (e) {} }, apply, unlock() { ensure(); } };
+})();
+
+/* ---------- menus ---------- */
+const Shell = {
+  screen(html) { document.getElementById('app').innerHTML = html; },
+  menu() {
+    Battle.sid++; Tray.close(); G = null;
+    const save = Store.get('save', null);
+    document.body.classList.remove('in-battle');
+    this.screen(`<div class="menu">
+      <div class="crest"><img src="icons/icon-192.png" alt=""></div>
+      <h1>Iron Dominion</h1><p class="tag">A grim war for the last worlds. Hold the line.</p>
+      ${save ? `<button class="tile big" onclick="Shell.resume()"><span>▶</span>Continue battle<small>Round ${save.round} · ${save.players[0].name} vs ${save.players[1].name}</small></button>` : ''}
+      <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
+      <div class="row"><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
+      <button class="tile" data-install><span>⬇</span>Install</button>
+      <div class="ver">v${GAME_VERSION} · Stage 1: First blood</div></div>`);
+  },
+  async play() {
+    const mode = await choose('New battle', 'A 500-point skirmish. Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
+    if (!mode) return;
+    const army = await choose(mode === 'pp' ? 'Player 1: choose your army' : 'Choose your army', Object.entries(ARMIES).map(([k, a]) => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
+    if (!army) return;
+    const other = Object.keys(ARMIES).find(k => k !== army);
+    const players = mode === 'ai' ? [{ name: 'You', army, type: 'human' }, { name: 'The AI', army: other, type: 'ai' }] : [{ name: 'Player 1', army, type: 'human' }, { name: 'Player 2', army: other, type: 'human' }];
+    this.startBattle({ players, diff: Settings.diff });
+  },
+  startBattle(cfg) { Store.del('save'); this.battleScreen(); Battle.start(cfg); },
+  battleScreen() {
+    document.body.classList.add('in-battle');
+    this.screen(`<div class="topbar"><button onclick="Shell.pause()">☰</button><span>Iron Dominion</span><button onclick="Shell.howto()">?</button></div><div id="bf"></div>`);
+    Battle.root = document.getElementById('bf');
+  },
+  resume() { const s = Store.get('save', null); if (!s) return this.menu(); this.battleScreen(); Battle.resume(s); },
+  save() { if (G && !G.over && Battle.mySide() !== null) Store.set('save', G); },
+  clearSave() { Store.del('save'); },
+  async pause() {
+    const v = await choose('Paused', '', [{ l: '▶ Resume', v: 'r', p: 1 }, { l: '⚙ Settings', v: 's' }, { l: '? How to play', v: 'h' }, { l: '🏠 Main menu', v: 'm' }]);
+    if (v === 's') this.settings(true); else if (v === 'h') this.howto(); else if (v === 'm') { this.save(); this.menu(); }
+  },
+  async endScreen(title, msg) {
+    const v = await choose(title, msg, [{ l: '⚔ Battle again', v: 'a', p: 1 }, { l: '🏠 Main menu', v: 'm' }, { l: 'Look at the field', v: 's' }]);
+    if (v === 'a') this.startBattle(G.cfg); else if (v === 'm') this.menu();
+  },
+  settings(inBattle) {
+    const slider = (k, l) => `<label class="set"><span>${l}</span><input type="range" min="0" max="100" value="${Settings[k]}" oninput="Settings.${k}=+this.value;saveSettings()"></label>`;
+    const toggle = (k, l, on, off) => `<label class="set"><span>${l}</span><select onchange="Settings.${k}=this.value==='1';saveSettings()"><option value="0" ${!Settings[k] ? 'selected' : ''}>${off}</option><option value="1" ${Settings[k] ? 'selected' : ''}>${on}</option></select></label>`;
+    sheet(`<h2>Settings</h2>${slider('music', 'Music')}${slider('sfx', 'Sound effects')}
+      ${toggle('quick', 'Dice', 'Quick (rolled for you)', 'Hands-on (roll them yourself)')}
+      ${toggle('fast', 'Game speed', 'Fast', 'Normal')}
+      <label class="set"><span>AI general</span><select onchange="Settings.diff=this.value;saveSettings()">${['easy', 'normal', 'hard'].map(d => `<option value="${d}" ${Settings.diff === d ? 'selected' : ''}>${d[0].toUpperCase() + d.slice(1)}</option>`).join('')}</select></label>
+      <p class="small">The AI setting applies from the next battle.</p>
+      <button class="b danger" onclick="Shell.reset()">Reset save data</button>`);
+  },
+  async reset() { const v = await choose('Reset save data?', 'This deletes your battle in progress and your settings.', [{ l: 'Delete', v: 1 }, { l: 'Keep', v: 0, p: 1 }]); if (v) { Store.del('save'); Store.del('settings'); location.reload(); } },
+  more() {
+    sheet(`<h2>More</h2><div class="grid2">
+      <button class="tile" onclick="Shell.howto()"><span>?</span>How to play</button>
+      <button class="tile" onclick="Shell.news()"><span>✦</span>What's new</button>
+      <button class="tile" onclick="Shell.credits()"><span>★</span>Credits</button>
+      <button class="tile" onclick="Shell.review()"><span>✎</span>Review</button>
+      <button class="tile" onclick="Shell.support()"><span>♥</span>Support</button>
+      <button class="tile" data-get-latest><span>⟳</span>Get latest version</button></div>`);
+  },
+  howto() {
+    sheet(`<h2>How to play</h2><div class="prose">
+      <p><b>Goal:</b> score the most victory points (VP) over five battle rounds by holding the five numbered objectives, or wipe out the enemy army.</p>
+      <p><b>Your turn</b> has five phases:</p>
+      <ol><li><b>Command:</b> both sides gain 1 command point (CP). Your units below half strength take a battle-shock test (2D6, needing their Leadership). Failed units are <i>shaken</i> and can't hold objectives.</li>
+      <li><b>Movement:</b> tap a unit, then Move (its M in inches; each square is 2"), Advance (extra D6", but no charging and only assault weapons can fire) or Hold. Units in combat can Fall Back.</li>
+      <li><b>Shooting:</b> tap a unit, tap Shoot, then tap a glowing enemy in range and sight. Ruins block sight. Cover gives +1 to saves.</li>
+      <li><b>Charge:</b> a unit within 12" of an enemy can charge: roll 2D6 and reach them to get stuck in. Chargers strike first.</li>
+      <li><b>Fight:</b> every unit in combat fights, chargers first.</li></ol>
+      <p><b>The dice:</b> roll to hit (the weapon's skill or better), sweep away the misses, roll to wound (Strength against Toughness), then the defender rolls saves (worsened by AP). Each unsaved wound deals the weapon's Damage. Re-rolls show up as buttons: tap them, or spend 1 CP on a command re-roll and tap the die you want again.</p>
+      <p><b>Objectives:</b> a marker belongs to the side with the most Objective Control (OC) within 3". From round 2, at the end of your turn you score 5 VP for holding one, 5 more for holding two or more, and 5 more for holding more than the enemy.</p>
+      <p><b>Tap any model</b> to see its unit's datasheet. Prefer the dice rolled for you? Choose Quick dice in Settings.</p></div>`);
+  },
+  news() { sheet(`<h2>What's new</h2>${CHANGES.map(([v, d, t, items]) => `<h3>${v} · ${t} <small>${d}</small></h3><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`).join('')}`); },
+  credits() {
+    sheet(`<h2>Credits</h2><div class="prose center"><img src="icons/icon-192.png" width="72" alt=""><p><b>Iron Dominion</b><br>A Kralnu Games title</p>
+      <p>Ideas, design and testing by Kris. Built with Claude, an AI by Anthropic.</p>
+      <p>All armies, units, rules text and artwork are original. Iron Dominion is an independent game inspired by tabletop wargaming and is not affiliated with any wargame company.</p>
+      <p>Sounds and music are synthesised in the game. No third-party assets.</p>
+      <p><a href="https://kralnugames.com" target="_blank" rel="noopener">kralnugames.com</a> · hello@kralnugames.com</p></div>`);
+  },
+  review() {
+    sheet(`<h2>Review</h2><div class="prose"><p>How's the war going? Tell Kris what you think.</p>
+      <label class="set"><span>Rating</span><select id="rv-r">${[5, 4, 3, 2, 1].map(n => `<option>${n}</option>`).join('')}</select></label>
+      <textarea id="rv-l" placeholder="What did you like?"></textarea><textarea id="rv-c" placeholder="What would you change?"></textarea><input id="rv-n" placeholder="Your name (optional)">
+      <button class="b gold" onclick="Shell.sendReview()">Send review</button>
+      <p class="small">Or email hello@kralnugames.com</p></div>`);
+  },
+  sendReview() {
+    const q = new URLSearchParams(); const g = id => (document.getElementById(id) || {}).value || '';
+    q.set(FORM_FIELDS.rating, g('rv-r')); q.set(FORM_FIELDS.liked, g('rv-l')); q.set(FORM_FIELDS.change, g('rv-c')); q.set(FORM_FIELDS.name, g('rv-n')); q.set(FORM_FIELDS.version, 'Iron Dominion ' + GAME_VERSION);
+    fetch(`https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`, { method: 'POST', mode: 'no-cors', body: q }).catch(() => {});
+    closeSheet(); toast('Thanks! Your review is on its way.');
+  },
+  support() { sheet(`<h2>Support</h2><div class="prose center"><p>Enjoying Iron Dominion? You can support Kralnu Games on Ko-fi. It's always free to play, with no ads.</p><a class="b gold" href="https://ko-fi.com/kralnu90" target="_blank" rel="noopener">♥ Ko-fi</a></div>`); }
+};
+
+/* ---------- little dialog helpers ---------- */
+function choose(title, html, btns) {
+  return new Promise(res => {
+    const ov = document.createElement('div'); ov.className = 'ov';
+    ov.innerHTML = `<div class="dlg"><h2>${title}</h2>${html ? `<div class="dlg-b">${html}</div>` : ''}<div class="dlg-btns">${btns.map((b, i) => `<button class="b ${b.p ? 'gold' : ''}" data-i="${i}">${b.l}</button>`).join('')}</div></div>`;
+    ov.onclick = e => { const i = e.target.closest('[data-i]'); if (i) { ov.remove(); res(btns[+i.dataset.i].v); } };
+    document.body.appendChild(ov);
+  });
+}
+function sheet(html) { closeSheet(); const ov = document.createElement('div'); ov.className = 'ov'; ov.id = 'sheet'; ov.innerHTML = `<div class="dlg wide">${html}<div class="dlg-btns"><button class="b gold" onclick="closeSheet()">Back</button></div></div>`; ov.onclick = e => { if (e.target === ov) closeSheet(); }; document.body.appendChild(ov); }
+function closeSheet() { document.getElementById('sheet')?.remove(); if (G && Battle.root) Battle.render(); }
+
+/* ---------- start ---------- */
+window.kgBeforeUpdate = () => Shell.save();
+addEventListener('pagehide', () => Shell.save());
+document.addEventListener('visibilitychange', () => { if (document.hidden) Shell.save(); });
+document.addEventListener('pointerdown', () => Sfx.unlock(), { once: true });
+addEventListener('resize', () => { if (G && Battle.root) Battle.render(); });
+setTimeout(() => { document.getElementById('splash')?.classList.add('gone'); Shell.menu(); }, 1400);
+
+</script>
+<!-- Kralnu Games install kit: Install button, Android/desktop prompt and iPhone instructions -->
+<style id="kg-install-style">
+html:not(.kg-can-install) [data-install]{display:none!important}
+.kg-sheet{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483000;width:min(420px,calc(100% - 24px));background:#14205e;color:#eef1ff;border:2px solid #cdd6ff;border-radius:16px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.35);font:15px/1.45 system-ui,sans-serif;display:grid;gap:10px;text-align:left}
+.kg-sheet b{font-size:17px}
+.kg-sheet p{margin:0}
+.kg-row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.kg-row button{font:inherit;font-weight:700;border-radius:999px;padding:9px 16px;cursor:pointer;border:2px solid #cdd6ff;background:transparent;color:inherit}
+.kg-row .kg-yes{background:#e0b03a;border-color:#e0b03a;color:#1a1200}
+.kg-row button:focus-visible{outline:3px solid #f2c14e;outline-offset:2px}
+</style>
+<script id="kg-install">
+(function(){
+  var NAME='Iron Dominion',KEY='idom-install-snooze',AUTO=0;
+  var evt=null,sheet=null,root=document.documentElement;
+  var ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  function standalone(){return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true}
+  function can(){return !standalone()&&(!!evt||ios)}
+  function sync(){root.classList.toggle('kg-can-install',can())}
+  function snoozed(){try{return Date.now()<(+localStorage.getItem(KEY)||0)}catch(e){return false}}
+  function snooze(days){try{localStorage.setItem(KEY,String(Date.now()+days*864e5))}catch(e){}}
+  function close(){if(sheet){sheet.remove();sheet=null}}
+  function show(auto){close();var iosHelp=!evt&&ios;sheet=document.createElement('div');sheet.className='kg-sheet';sheet.setAttribute('role','dialog');sheet.setAttribute('aria-label','Install '+NAME);
+    sheet.innerHTML='<b>Install '+NAME+'?</b><p>'+(iosHelp?'In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>. It then opens full screen and works offline.':'Put it on your home screen and play full screen like a proper app, even without a signal.')+'</p><div class="kg-row"><button type="button" class="kg-no">'+(iosHelp?'Got it':'Not now')+'</button>'+(iosHelp?'':'<button type="button" class="kg-yes">Install</button>')+'</div>';
+    document.body.appendChild(sheet);
+    sheet.querySelector('.kg-no').onclick=function(){snooze(auto?3:1);close()};
+    var y=sheet.querySelector('.kg-yes');if(y){y.onclick=install;y.focus()}}
+  function install(){close();var e=evt;evt=null;if(!e){sync();return}e.prompt();Promise.resolve(e.userChoice).then(sync,sync)}
+  addEventListener('beforeinstallprompt',function(e){e.preventDefault();evt=e;sync();if(AUTO&&!snoozed())setTimeout(function(){if(evt&&!sheet&&!standalone())show(true)},AUTO)});
+  addEventListener('appinstalled',function(){evt=null;sync();close()});
+  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-install]');if(!b)return;e.preventDefault();e.stopPropagation();if(evt)install();else if(ios)show(false)},true);
+  sync();
+  window.KralnuInstall={can:can,open:function(){show(false)}};
+  if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+})();
+</script>
+<style id="kg-update-style">
+.kg-upd{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,calc(-100% - 24px));transition:transform .35s ease;z-index:2147483001;width:min(440px,calc(100% - 20px));box-sizing:border-box;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#14205e;color:#eef1ff;border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px 10px 10px 14px;box-shadow:0 10px 28px rgba(0,0,0,.4);font:600 14px/1.35 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;text-align:left;letter-spacing:0;text-transform:none}
+.kg-upd.on{transform:translate(-50%,0)}
+.kg-upd span{flex:1 1 160px}
+.kg-upd button{font:inherit;border-radius:999px;padding:8px 14px;cursor:pointer;border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;white-space:nowrap;width:auto;margin:0}
+.kg-upd .kg-go{background:#e0b03a;border-color:#e0b03a;color:#1a1200}
+.kg-upd button:focus-visible{outline:3px solid #f2c14e;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.kg-upd{transition:none}}
+</style>
+<script id="kg-update">
+// Kralnu Games update check. When you push an update, change the game's version
+// AND version.json to the same new value; players then get a "new version" notice.
+(function(){
+  var NAME="Iron Dominion",BUILD="0.1.0",CACHES=["idom-"],CHECK=true;
+  var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
+  if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
+  function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}
+  function skipped(v){try{return sessionStorage.getItem('kg-upd-skip')===v}catch(e){return false}}
+  function hide(){if(!bar)return;var b=bar;bar=null;b.classList.remove('on');setTimeout(function(){b.remove()},400)}
+  function note(html,buttons){hide();bar=document.createElement('div');bar.className='kg-upd';bar.setAttribute('role','status');
+    bar.innerHTML='<span>'+html+'</span>'+buttons;document.body.appendChild(bar);
+    var b=bar;requestAnimationFrame(function(){requestAnimationFrame(function(){b.classList.add('on')})});return b}
+  function latest(){return fetch('version.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()})}
+  function now(){if(busy)return;busy=true;
+    // Only clear the offline copy once we know the newest version can be downloaded.
+    latest().then(function(){
+      try{window.kgBeforeUpdate&&window.kgBeforeUpdate()}catch(e){}
+      var jobs=[];
+      try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)jobs.push(navigator.serviceWorker.getRegistrations().then(function(rs){return Promise.all(rs.filter(function(r){return r.scope.indexOf(location.origin+dir)===0}).map(function(r){return r.unregister()}))}))}catch(e){}
+      try{if(window.caches)jobs.push(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return CACHES.some(function(p){return k.indexOf(p)===0})}).map(function(k){return caches.delete(k)}))}))}catch(e){}
+      var done=false,go=function(){if(done)return;done=true;location.replace(path+'?v='+Date.now())};
+      Promise.all(jobs).then(go,go);setTimeout(go,3000);
+    },function(){busy=false;
+      var b=note('No connection right now. Get online, then try again.','<button type="button" class="kg-later">OK</button>');
+      b.querySelector('.kg-later').onclick=hide;setTimeout(function(){if(bar===b)hide()},6000);
+    });
+  }
+  function show(v){if(bar||skipped(v))return;
+    var b=note('A new version of '+NAME+' is ready.','<button type="button" class="kg-later">Later</button><button type="button" class="kg-go">Update</button>');
+    b.querySelector('.kg-go').onclick=now;
+    b.querySelector('.kg-later').onclick=function(){try{sessionStorage.setItem('kg-upd-skip',v)}catch(e){}hide()};
+  }
+  function check(force){if(!CHECK)return;var t=Date.now();if(!force&&t-last<6e5)return;last=t;
+    latest().then(function(j){if(j&&j.version!=null&&String(j.version)!==build())show(String(j.version))}).catch(function(){})}
+  document.addEventListener('click',function(e){var b=e.target&&e.target.closest&&e.target.closest('[data-get-latest]');if(!b)return;e.preventDefault();e.stopPropagation();now()},true);
+  addEventListener('load',function(){setTimeout(function(){check(true)},4000)});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)check(false)});
+  setInterval(function(){if(!document.hidden)check(false)},18e5);
+  window.KralnuUpdate={now:now,check:function(){check(true)},build:build};
+})();
+</script>
+
+</body>
+</html>

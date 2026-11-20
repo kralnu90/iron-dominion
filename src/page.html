@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Iron Dominion</title>
+<meta name="description" content="Iron Dominion: a grimdark sci-fi tabletop wargame for your phone. Command squads, roll the dice yourself and hold the objectives. Free, from Kralnu Games.">
+<meta name="theme-color" content="#14110f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta property="og:title" content="Iron Dominion">
+<meta property="og:description" content="A grimdark tabletop wargame for your phone. Roll the dice yourself and hold the line.">
+<meta property="og:image" content="icons/icon-512.png">
+<style>
+:root{--gold:#d9b54a;--ink:#14110f;--panel:#221c18;--edge:#4a3a2c;--text:#efe6d6;--dim:#a8998a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:radial-gradient(ellipse at 50% -10%,#3a2a20,#14110f 60%);color:var(--text);font:15px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;min-height:100vh}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+h1,h2,h3{font-family:Georgia,'Times New Roman',serif;letter-spacing:.04em;margin:.2em 0}
+button{font:inherit;color:inherit;cursor:pointer}
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:#0c0a09;transition:opacity .6s}
+#splash.gone{opacity:0;pointer-events:none}
+#splash img{width:120px;filter:drop-shadow(0 0 20px rgba(217,181,74,.35))}
+#splash h1{color:var(--gold);font-size:30px;text-transform:uppercase}
+#splash p{color:var(--dim);font-size:12px;margin:0}
+.menu{max-width:420px;margin:0 auto;padding:28px 18px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.menu h1{color:var(--gold);font-size:34px;text-transform:uppercase;text-shadow:0 2px 0 #000}
+.menu .tag{color:var(--dim);margin:0 0 8px}
+.crest img{width:110px;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
+.tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px;border-radius:14px;border:1px solid var(--edge);background:linear-gradient(160deg,#2c241e,#1b1613);box-shadow:0 4px 12px rgba(0,0,0,.4);font-weight:700}
+.tile span{font-size:24px;color:var(--gold)}
+.tile small{font-weight:400;color:var(--dim);font-size:12px}
+.tile.big{padding:20px;font-size:18px;border-color:var(--gold);background:linear-gradient(160deg,#4a3818,#241a0e)}
+.row,.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ver{color:var(--dim);font-size:11px;margin-top:8px}
+.b{border:1px solid var(--edge);background:#2c241e;border-radius:10px;padding:9px 14px;font-weight:700;display:inline-block;text-decoration:none;color:var(--text)}
+.b.gold{background:linear-gradient(180deg,#e6c55e,#b38a2a);color:#1d1406;border-color:#f0d47a}
+.b.big{padding:13px 22px;font-size:17px}
+.b.end{background:#3a2a20;border-color:#7a5a3a}
+.b.danger{background:#5a1c18;border-color:#8a3a30;margin-top:10px}
+.ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px}
+.dlg{background:linear-gradient(170deg,#2a221c,#17120f);border:1px solid var(--gold);border-radius:16px;padding:16px;width:min(380px,100%);max-height:88vh;overflow:auto;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.6)}
+.dlg.wide{width:min(460px,100%);text-align:left}
+.dlg h2{color:var(--gold);font-size:20px}
+.dlg-b{color:var(--text);font-size:14px;margin:8px 0 12px;text-align:left}
+.dlg-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.prose p,.prose li{font-size:14px}.prose ol{padding-left:20px}.center{text-align:center}
+.small{color:var(--dim);font-size:12px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}
+.set select,.set input[type=range]{flex:0 0 55%}
+select,input,textarea{background:#1a1512;color:var(--text);border:1px solid var(--edge);border-radius:8px;padding:7px;font:inherit;width:100%}
+textarea{min-height:64px;margin:6px 0}
+/* battle */
+body.in-battle{overflow-x:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 8px}
+.topbar button{width:38px;height:34px;border-radius:9px;border:1px solid var(--edge);background:#2c241e}
+.topbar span{font-family:Georgia,serif;color:var(--gold);letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+#bf{max-width:520px;margin:0 auto;padding:0 4px 12px}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:6px}
+.hud .side{border-left:4px solid var(--c);background:#221c18;border-radius:8px;padding:4px 8px;display:flex;flex-direction:column;font-size:12px}
+.hud .side.s1{border-left:0;border-right:4px solid var(--c);text-align:right}
+.hud .side span{color:var(--dim)}
+.hud .rnd{text-align:center;display:flex;flex-direction:column;font-size:12px}.hud .rnd b{color:var(--gold)}
+.board-wrap{display:flex;justify-content:center}
+.board{position:relative;background-color:#3b3a33;background-image:linear-gradient(rgba(0,0,0,.18) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.18) 1px,transparent 1px);border:3px solid #5a4632;border-radius:6px;box-shadow:inset 0 0 40px rgba(0,0,0,.5),0 10px 24px rgba(0,0,0,.6);overflow:hidden;touch-action:manipulation}
+.board::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(208,112,44,.08) 0,transparent 20%,transparent 80%,rgba(43,74,122,.12) 100%);pointer-events:none}
+.t-ruin{position:absolute;background:linear-gradient(135deg,#6e6457,#4b443b);border:1px solid #2d2822;box-shadow:inset 0 0 0 2px rgba(0,0,0,.25)}
+.t-crater{position:absolute;background:radial-gradient(circle,#2a2622 30%,#4a453d 70%,transparent 72%)}
+.t-wall{position:absolute;background:repeating-linear-gradient(45deg,#7a6a4a 0 4px,#5a4c33 4px 8px);border-radius:3px;transform:scaleY(.5)}
+.reach{position:absolute;background:rgba(120,220,140,.28);outline:1px solid rgba(120,220,140,.35)}
+.obj{position:absolute;border:2px dashed;border-radius:50%;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.obj span{width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+.mdl{position:absolute;border-radius:50%;border:2px solid rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;line-height:1;box-shadow:0 2px 4px rgba(0,0,0,.6);transition:left .35s ease,top .35s ease}
+.mdl.veh{border-radius:22%}
+.mdl.sel{box-shadow:0 0 0 3px #fff,0 0 12px #fff}
+.mdl.view{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.mdl.tgt{box-shadow:0 0 0 3px #ff5a4a,0 0 12px #ff5a4a;animation:pulse 1s infinite}
+.mdl.aim{box-shadow:0 0 0 3px #ff3b2f,0 0 16px #ff3b2f}
+.mdl.fl{box-shadow:0 0 0 3px #ffe58a}
+.mdl.shk{filter:saturate(.3) brightness(.8)}
+.mdl .wd{position:absolute;right:-5px;top:-5px;background:#c0261c;color:#fff;font-style:normal;font-size:9px;border-radius:7px;padding:0 3px}
+@keyframes pulse{50%{box-shadow:0 0 0 3px #ff5a4a,0 0 2px #ff5a4a}}
+.banner{position:absolute;left:0;right:0;top:40%;text-align:center;pointer-events:none;opacity:0}
+.banner b{display:block;font-family:Georgia,serif;color:var(--gold);font-size:20px;text-shadow:0 2px 6px #000}
+.banner span{color:#fff;text-shadow:0 2px 6px #000;font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+.banner.show{animation:ban 1.6s ease}
+@keyframes ban{0%{opacity:0;transform:translateY(8px)}15%,70%{opacity:1;transform:none}100%{opacity:0}}
+.panel{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.msg{text-align:center;color:var(--dim);font-size:13px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.card{background:#221c18;border:1px solid var(--edge);border-radius:12px;padding:8px 10px;font-size:12px}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}.card-h b{font-size:14px}.card-h span{color:var(--dim)}
+.stats{display:flex;gap:4px;margin:4px 0 6px}.stats div{flex:1;background:#14110f;border-radius:6px;text-align:center;padding:2px 0}.stats i{display:block;font-style:normal;font-size:9px;color:var(--dim)}.stats b{font-size:13px}
+.wl{margin:2px 0}.wl span{color:var(--dim)}
+.rule{margin-top:4px;color:#e8d9a8}
+.flags{margin-top:4px;display:flex;gap:4px;flex-wrap:wrap}.flags span{background:#3a2a20;border-radius:6px;padding:1px 6px;font-size:11px}
+/* dice tray */
+#tray{position:fixed;left:0;right:0;bottom:0;z-index:50;transform:translateY(110%);transition:transform .3s ease;display:flex;justify-content:center;padding:0 6px calc(8px + env(safe-area-inset-bottom))}
+#tray.on{transform:none}
+.tray-in{width:min(520px,100%);background:radial-gradient(ellipse at 50% 0,#3d2a1c,#1a120c 80%);border:2px solid #7a5a3a;border-bottom:0;border-radius:18px 18px 0 0;padding:12px 12px 14px;box-shadow:0 -10px 30px rgba(0,0,0,.6);text-align:center}
+.tray-title{font-family:Georgia,serif;color:var(--gold);font-size:15px}
+.tray-label{color:var(--text);font-size:13px;margin:2px 0 8px}
+.dice{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;min-height:44px;padding:10px;background:rgba(0,0,0,.35);border-radius:12px;box-shadow:inset 0 2px 10px rgba(0,0,0,.6)}
+.die{width:36px;height:36px;border-radius:8px;background:linear-gradient(160deg,#fbf6ea,#d9cdb3);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:5px;box-shadow:0 3px 0 #8f7a4f,0 4px 6px rgba(0,0,0,.5);transition:transform .2s,opacity .2s}
+.die span.pip{width:7px;height:7px;border-radius:50%;background:#2a1a10;place-self:center}
+.die.good{background:linear-gradient(160deg,#fbf6ea,#d9cdb3);box-shadow:0 0 0 2px #5fd07a,0 3px 0 #8f7a4f}
+.die.bad{opacity:.45;filter:grayscale(.6)}
+.die.blank{background:linear-gradient(160deg,#cfc6b3,#a89c84)}
+.dice.rolling .die{animation:tumble .12s infinite alternate}
+.dice.picking .die{animation:wob .6s infinite;cursor:pointer}
+@keyframes tumble{from{transform:rotate(-14deg) translateY(-3px)}to{transform:rotate(16deg) translateY(2px)}}
+@keyframes wob{50%{transform:rotate(6deg) scale(1.06)}}
+.tray-sum{margin-top:8px;font-weight:800;font-size:15px}.tray-sum.good{color:#7be08f}.tray-sum.bad{color:#ff8a7a}
+.tray-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px}
+#toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));transform:translate(-50%,-150%);transition:transform .3s;z-index:70;background:#2c241e;border:1px solid var(--gold);border-radius:12px;padding:8px 14px;font-weight:700;font-size:13px;max-width:90vw;text-align:center}
+#toast.on{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div id="splash"><img src="icons/icon-512.png" alt=""><h1>Iron Dominion</h1><p>Kralnu Games presents · built with Claude, an AI by Anthropic</p></div>
+<div id="app"></div>
+<script>
+/*__JS__*/
+</script>
+<!--__KITS__-->
+</body>
+</html>

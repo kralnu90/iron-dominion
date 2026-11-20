@@ -3,8 +3,8 @@
    IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
    Distances are in inches; the board is a grid of 2" squares.
    ============================================================================ */
-const GAME_VERSION = '0.3.2';
-const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
+const GAME_VERSION = '0.3.3';
+let COLS = 15, ROWS = 21; const SQ = 2;   // 30" x 42" board (58" long for Strike Force)
 
 /* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
    twin (re-roll wounds), melta N (+N damage at half range), assault (may fire after advancing), pistol */
@@ -147,21 +147,21 @@ const UNITS = {
   railStrider: { n: 'Railspire Strider', role: 'Walker', pts: 130, ic: '♞', M: 8, T: 9, Sv: 3, W: 10, Ld: 7, OC: 3, vehicle: 1,
     models: [[1, ['railLance'], ['striderStomp']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['railLance'], ['twinIon']] }] },
   /* ---------------- THE CHITIN BROOD ---------------- */
-  broodMatriarch: { n: 'Brood Matriarch', role: 'Leader', pts: 85, ic: '♕', M: 8, T: 7, Sv: 3, W: 8, Ld: 6, OC: 2, ward: 5, vehicle: 1,
+  broodMatriarch: { n: 'Brood Matriarch', role: 'Leader', pts: 85, ic: '♕', M: 8, T: 7, Sv: 3, W: 10, Ld: 6, OC: 2, ward: 5, vehicle: 1,
     models: [[1, ['spineVolley'], ['monScythes']]], rule: { id: 'linkAura', n: 'Brood Link', txt: 'Friendly units within 9" automatically pass battle-shock tests.' } },
   spawnWarden: { n: 'Spawn-Warden', role: 'Leader', pts: 45, ic: '⚘', M: 6, T: 5, Sv: 4, W: 5, Ld: 7, OC: 1,
     models: [[1, ['acidSpit'], ['boneStaff']]],
     lead: { id: 'toughUp', n: 'Chitin Hardening', txt: 'The unit gets +1 Toughness.' }, leads: ['skitterlings', 'razorfiends'] },
-  skitterlings: { n: 'Skitterling Swarm', role: 'Core troops', pts: 55, ic: '⁂', M: 8, T: 3, Sv: 6, W: 1, Ld: 8, OC: 2,
+  skitterlings: { n: 'Skitterling Swarm', role: 'Core troops', pts: 55, ic: '⁂', M: 8, T: 3, Sv: 5, W: 1, Ld: 8, OC: 2,
     models: [[10, ['spineDarts'], ['skitterClaws']]], sizes: [{ n: 10, pts: 55 }, { n: 20, pts: 100 }] },
-  razorfiends: { n: 'Razorfiend Pack', role: 'Assault', pts: 85, ic: '⚚', M: 8, T: 5, Sv: 4, W: 4, Ld: 8, OC: 1,
+  razorfiends: { n: 'Razorfiend Pack', role: 'Assault', pts: 85, ic: '⚚', M: 8, T: 6, Sv: 4, W: 4, Ld: 8, OC: 1,
     models: [[3, [], ['razorScythes']]], sizes: [{ n: 3, pts: 85 }, { n: 6, pts: 170 }], rule: { id: 'rerollCharge', n: 'Pounce', txt: 'May re-roll charge rolls.' },
     opts: [{ id: 'mel', n: 'Claws', g: 0, f: 'melee', ch: [['razorScythes'], ['boneSabres']] }] },
   vexwings: { n: 'Vexwings', role: 'Fast attack', pts: 60, ic: '⋎', M: 14, T: 3, Sv: 4, W: 2, Ld: 8, OC: 1,
     models: [[4, ['quillShot'], ['barbedTalons']]], sizes: [{ n: 4, pts: 60 }, { n: 8, pts: 120 }] },
-  tunnelWyrm: { n: 'Tunnel Wyrm', role: 'Monster', pts: 105, ic: '§', M: 8, T: 9, Sv: 3, W: 10, Ld: 8, OC: 3, vehicle: 1,
+  tunnelWyrm: { n: 'Tunnel Wyrm', role: 'Monster', pts: 105, ic: '§', M: 8, T: 9, Sv: 3, W: 12, Ld: 8, OC: 3, vehicle: 1,
     models: [[1, ['acidSpray'], ['grindingMaw']]], rule: { id: 'burrow', n: 'Burrower', txt: 'Sets up after both armies, anywhere outside the deployment zones and more than 9" from the enemy.' } },
-  behemoth: { n: 'Chitin Behemoth', role: 'Monster', pts: 150, ic: '♅', M: 8, T: 10, Sv: 2, W: 12, Ld: 8, OC: 4, vehicle: 1,
+  behemoth: { n: 'Chitin Behemoth', role: 'Monster', pts: 150, ic: '✺', M: 8, T: 10, Sv: 2, W: 12, Ld: 8, OC: 4, vehicle: 1,
     models: [[1, ['sporeCannon'], ['crushTalons']]], opts: [{ id: 'mel', n: 'Claws', g: 0, f: 'melee', ch: [['crushTalons'], ['reaperClaws']] }] }
 };
 for (const [k, U] of Object.entries(UNITS)) { U.id = k; if (!U.sizes) U.sizes = [{ n: U.models.reduce((a, g) => a + g[0], 0), pts: U.pts }]; U.opts = U.opts || []; }
@@ -171,7 +171,7 @@ const SUBS = {
   covenant: {
     anvil: { n: 'Order of the Anvil', tag: 'Hold the line', id: 'bulwark', rn: 'Iron Bulwark', txt: 'Enemy attacks against your units have their AP worsened by 1 (AP-1 becomes AP0).' },
     flame: { n: 'Order of the Flame', tag: 'Close and kill', id: 'fervour', rn: 'Fervour', txt: 'Your melee weapons get an extra -1 AP, and your units add 1 to charge rolls.' },
-    hunt: { n: 'Order of the Hunt', tag: 'Gun them down', id: 'prey', rn: 'Marked Prey', txt: 'Your ranged attacks may re-roll hit rolls of 1 and wound rolls of 1.' }
+    hunt: { n: 'Order of the Hunt', tag: 'Gun them down', id: 'prey', rn: 'Marked Prey', txt: 'Your ranged attacks may re-roll hit rolls of 1.' }
   },
   rust: {
     gut: { n: 'The Gutstompers', tag: 'Charge everything', id: 'stampede', rn: 'Stampede', txt: 'Your units add 1 to charge rolls (up to +2 with Fury of the Tide).' },
@@ -189,7 +189,7 @@ const SUBS = {
     swarm: { n: 'The Endless Swarm', tag: 'Faster than fear', id: 'swift', rn: 'Skittering Speed', txt: 'Your units add 2" to their Move.' }
   }
 };
-const POINTS = [{ pts: 500, n: 'Skirmish', depth: 4, maxModels: 42 }, { pts: 750, n: 'Clash', depth: 5, maxModels: 55 }];
+const POINTS = [{ pts: 500, n: 'Skirmish', depth: 4, maxModels: 42, rows: 21 }, { pts: 750, n: 'Clash', depth: 5, maxModels: 55, rows: 21 }, { pts: 1000, n: 'Strike Force', depth: 6, maxModels: 80, rows: 29 }];
 
 const ARMIES = {
   covenant: { n: 'The Ironclad Covenant', short: 'Covenant', col: '#9cc2f0', dark: '#1f3a66', blurb: 'Gene-forged knights: few, elite and hard to kill.',
@@ -224,10 +224,14 @@ const MAPS = {
     terr: { ruin: [[6, 3], [6, 4], [9, 6], [10, 6], [4, 9], [4, 10], [13, 9]], crater: [[7, 8], [1, 12]], wall: [[8, 1], [9, 1], [3, 14], [11, 9]] } }
 };
 let OBJECTIVES = MAPS.hab.obj, TERRAIN = {}, MAP_ID = 'hab';
-function setMap(id) {
+function setMap(id, pts = 500) {
   MAP_ID = MAPS[id] ? id : 'hab'; const M = MAPS[MAP_ID], t = {};
-  for (const [type, cells] of Object.entries(M.terr)) cells.forEach(([c, r]) => { t[c + ',' + r] = type; t[(COLS - 1 - c) + ',' + (ROWS - 1 - r)] = type; });
-  OBJECTIVES = M.obj; TERRAIN = t;
+  ROWS = (POINTS.find(p => p.pts === pts) || POINTS[0]).rows;
+  const sy = r => Math.round(r * (ROWS - 1) / 20); // maps are drawn for 21 rows and stretched for bigger boards
+  for (const [type, cells] of Object.entries(M.terr)) cells.forEach(([c, r]) => { t[c + ',' + sy(r)] = type; t[(COLS - 1 - c) + ',' + (ROWS - 1 - sy(r))] = type; });
+  if (ROWS > 21) for (const [c, r] of [[1, 6], [12, 9], [6, 12]]) { t[c + ',' + r] = 'ruin'; t[(COLS - 1 - c) + ',' + (ROWS - 1 - r)] = 'ruin'; } // extra cover on the long board
+  OBJECTIVES = M.obj.map(([c, r]) => [c, sy(r)]); TERRAIN = t;
+  for (const [c, r] of OBJECTIVES) { delete t[c + ',' + r]; }
 }
 setMap('hab');
 /* is a square inside a side's deployment zone? side 1 deploys at the top, side 0 at the bottom */

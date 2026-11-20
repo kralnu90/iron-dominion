@@ -8,6 +8,7 @@ const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.3.3', '20 Nov 2026', 'Strike Force', ['1,000-point Strike Force battles on a longer battlefield (it scrolls)', 'A Doubled starter force option for quick 1,000-point games', 'Balance: the Order of the Hunt now re-rolls hit rolls of 1 only', 'Balance: tougher Brood (Brood Matriarch W10, Skitterlings Sv5+, Razorfiends T6, Tunnel Wyrm W12)']],
   ['0.3.2', '20 Nov 2026', 'The Chitin Brood', ['A fourth army: the Chitin Brood, a fast alien swarm that charges even after advancing', 'Seven new datasheets: Brood Matriarch, Spawn-Warden, Skitterling Swarm, Razorfiend Pack, Vexwings, Tunnel Wyrm and the Chitin Behemoth', 'The Tunnel Wyrm bursts up in no-man\'s land after both armies deploy', 'Three sub-factions and a new Gambit, Adrenal Surge', 'Bring It Down now also counts Monsters']],
   ['0.3.1', '20 Nov 2026', 'The Auric Concord', ['A third army: the Auric Concord, gilded merchant-lords with battlesuits, drones and long guns', 'Seven new datasheets: Factor-Prime, Drone-Marshal, Lumen Wardens, Longshot Marksmen, Skimmer Drones, Aegis Battlesuits and the Railspire Strider', 'Army rule Measured Fire, three sub-factions and a new Gambit, Overcharge', 'Choose your enemy when you start a battle, or let the game surprise you', "The Covenant starter force now fights as the Order of the Hunt"]],
   ['0.3.0', '20 Nov 2026', 'Tactics', ['Gambits: spend command points on Focused Fire, Rapid Assault, Go to Ground, Hold Fast, plus one special order per army', 'Secondary missions: hold two mission cards and score them for bonus VP; swap one for 1 CP', 'Three battlefields: the Ruined Hab-Block, the Crossroads and the Pincer (deploy from opposite corners)', 'Deployment zones are shaded in round 1, and the end screen splits objective and mission VP']],
@@ -52,12 +53,12 @@ const Shell = {
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
       <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 3c: The Chitin Brood</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 3: The full war</div></div>`);
   },
   async play(fromList) {
     const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
     if (!mode) return;
-    const pts = fromList ? fromList.pts : await choose('Battle size', POINTS.map(p => `<b>${p.pts} pts · ${p.n}</b>: about ${p.pts === 500 ? '5 or 6' : '7 to 9'} units a side.`).join('<br>'), POINTS.map((p, i) => ({ l: `${p.pts} pts · ${p.n}`, v: p.pts, p: !i })).concat([{ l: 'Back', v: null }]));
+    const pts = fromList ? fromList.pts : await choose('Battle size', POINTS.map(p => `<b>${p.pts} pts · ${p.n}</b>: about ${p.pts === 500 ? '5 to 7' : p.pts === 750 ? '7 to 10' : '10 to 14'} units a side${p.rows > 21 ? ', on a longer battlefield' : ''}.`).join('<br>'), POINTS.map((p, i) => ({ l: `${p.pts} pts · ${p.n}`, v: p.pts, p: !i })).concat([{ l: 'Back', v: null }]));
     if (!pts) return;
     const army = fromList ? fromList.army : await choose(mode === 'pp' ? 'Player 1: choose your army' : 'Choose your army', Object.entries(ARMIES).map(([k, a]) => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
     if (!army) return;
@@ -74,11 +75,12 @@ const Shell = {
   async pickList(army, pts, who) {
     const mine = Muster.all().filter(L => L.army === army && L.pts === pts && !listProblems(L).length), opts = [];
     if (pts === 500) opts.push({ l: 'Starter force', v: 'starter', p: 1 });
+    if (pts === 1000) opts.push({ l: 'Doubled starter force', v: 'starter2', p: 1 });
     mine.forEach(L => opts.push({ l: `${esc(L.name)}<small>${SUBS[army][L.sub].n} · ${listPts(L)} pts</small>`, v: L.id }));
     opts.push({ l: '🎲 Random force', v: 'random', p: !opts.length }, { l: 'Back', v: null });
     const v = await choose(`${who} army list`, `<b style="color:${ARMIES[army].col}">${ARMIES[army].n}</b> at ${pts} points.${mine.length ? '' : ' Build and save your own lists in Muster on the main menu.'}`, opts);
     if (!v) return null;
-    return v === 'starter' ? starterList(army) : v === 'random' ? randomList(army, pts) : JSON.parse(JSON.stringify(Muster.get(v)));
+    return v === 'starter' ? starterList(army) : v === 'starter2' ? starterList(army, 2) : v === 'random' ? randomList(army, pts) : JSON.parse(JSON.stringify(Muster.get(v)));
   },
   startBattle(cfg) { Store.del('save'); this.battleScreen(); Battle.start(cfg); },
   battleScreen() {
@@ -142,7 +144,7 @@ const Shell = {
       <li><b>Fight:</b> every unit in combat fights, chargers first.</li></ol>
       <p><b>The dice:</b> roll to hit (the weapon's skill or better), sweep away the misses, roll to wound (Strength against Toughness), then the defender rolls saves (worsened by AP). Each unsaved wound deals the weapon's Damage. Re-rolls show up as buttons: tap them, or spend 1 CP on a command re-roll and tap the die you want again.</p>
       <p><b>Objectives:</b> a marker belongs to the side with the most Objective Control (OC) within 3". From round 2, at the end of your turn you score 5 VP for holding one, 5 more for holding two or more, and 5 more for holding more than the enemy.</p>
-      <p><b>Battlefields:</b> three maps with their own terrain, objectives and deployment zones (shaded in round 1). Pick one in Settings or leave it on Random.</p>
+      <p><b>Battlefields:</b> three maps with their own terrain, objectives and deployment zones (shaded in round 1). Pick one in Settings or leave it on Random. 1,000-point Strike Force games use a longer battlefield that scrolls.</p>
       <p><b>Gambits:</b> spend command points on special orders such as Focused Fire (+1 to hit), Rapid Assault (charge after advancing), Go to Ground (+1 save when shot) and Hold Fast (pass a battle-shock test). Each one works once per phase. Tap the round box at the top to see them all.</p>
       <p><b>Secondary missions:</b> you hold two mission cards, such as Assassinate or Behind Enemy Lines. Complete one by the end of your turn for 3 to 5 bonus VP, then draw a new one. Tap the 📜 round box to see your cards, and swap one for 1 CP if it's out of reach.</p>
       <p><b>Muster:</b> build your own armies from the main menu. Spend points on units, pick squad sizes and swap wargear for free. Every list needs a Leader.</p>

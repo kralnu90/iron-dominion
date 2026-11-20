@@ -50,5 +50,11 @@ Kris may swap the two new armies for others: check before building 3b.
 - Army rule Relentless Swarm: charge after advancing, +1 to charge (shares the +2 cap). Subs: gorge (Feeding Frenzy +1 hit in melee when charging), shell (Hardened Carapace: -1 Damage vs Monsters), swarm (+2" Move). Gambit adrenal (re-roll the charge). Monsters use the vehicle flag (square tokens, count for Bring It Down).
 - Balance after buffs (skitter claws A3, razorfiends W4 A5, vexwings Sv4, wyrm T9 W10): Brood v Covenant 11-21, v Rust 7-9, v Concord 8-8. The Covenant is the strongest army overall: nerf it a touch in 3d.
 
-## Next: 3d, Strike Force
-1,000 points on a bigger scrolling board, a four-army balance pass, 2,000 only if phones cope.
+## v0.3.3 Stage 3d "Strike Force" (20 Nov 2026) - Stage 3 complete
+- COLS/ROWS are now let; POINTS gains rows (21, 21, 29) and 1000 pts (depth 6, 80 models). setMap(id, pts) stretches each map's rows to fit and adds three extra ruins on the long board. quarters() uses the board centre.
+- starterList(army, times) builds a Doubled starter force for 1000 pts.
+- Performance at 1000 (134 models, 4x CPU throttle): render ~12 ms, AI bestMove ~3 ms. Headless AI game ~5 s. 2,000 points NOT added: the phone board would need 150+ models a side and a second scrolling axis; revisit only if Kris asks.
+- Balance pass (starter 500, 16-32 games per pair): Cov-Rust 7-9, Cov-Concord 17-15, Cov-Brood ~even after Brood buff, Rust-Concord 7-9, Rust-Brood 14-18ish, Concord-Brood 7-9 (before the Brood buff). Hunt trimmed to re-roll hit 1s; Brood: Matriarch W10, Skitterlings Sv5, Razorfiends T6, Wyrm W12.
+
+## Next: Stage 4 "Polish" (not started)
+Mission pack, campaign, balance passes. Ask Kris before starting.

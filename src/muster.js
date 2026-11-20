@@ -21,11 +21,15 @@ function buildModels(e) {
   for (const o of U.opts) { const c = (e.o || {})[o.id] || 0; groups[o.g][o.f === 'guns' ? 1 : 2] = o.ch[c].slice(); }
   return groups;
 }
-function starterList(army) {
-  const A = ARMIES[army], units = A.list.map(x => { const [d, s] = x.split(':'); return { k: newKey(), d, s: +(s || 0), o: {} }; });
-  if (A.leadsInto != null) units[0].at = units[A.leadsInto].k;
-  for (const [l, b] of A.pairs || []) units[l].at = units[b].k;
-  return { id: 'starter-' + army, name: 'Starter force', army, sub: A.sub, pts: 500, units, builtIn: true };
+function starterList(army, times = 1) {
+  const A = ARMIES[army], units = [];
+  for (let t = 0; t < times; t++) {
+    const us = A.list.map(x => { const [d, s] = x.split(':'); return { k: newKey(), d, s: +(s || 0), o: {} }; });
+    if (A.leadsInto != null) us[0].at = us[A.leadsInto].k;
+    for (const [l, b] of A.pairs || []) us[l].at = us[b].k;
+    units.push(...us);
+  }
+  return { id: 'starter-' + army, name: times > 1 ? 'Doubled starter force' : 'Starter force', army, sub: A.sub, pts: 500 * times, units, builtIn: true };
 }
 /* problems that stop a list from being taken to battle */
 function listProblems(L) {

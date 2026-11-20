@@ -40,7 +40,7 @@ function makeUnit(e, side, leaders = []) {
 function newBattle(cfg) {
   NEXT_ID = 1; cfg.pts = cfg.pts || 500;
   if (!MAPS[cfg.map]) cfg.map = Object.keys(MAPS)[Math.floor(Math.random() * Object.keys(MAPS).length)];
-  setMap(cfg.map);
+  setMap(cfg.map, cfg.pts);
   G = { cfg, round: 1, turn: 0, phase: 'command', cp: [0, 0], vp: [0, 0], players: cfg.players, units: [], log: [], over: null, first: 0, cmdUsed: [false, false], score: [[], []] };
   cfg.players.forEach((p, s) => {
     const L = p.list = p.list || starterList(p.army);
@@ -58,7 +58,7 @@ function newBattle(cfg) {
 function migrate(state) {
   for (const u of state.units) { for (const m of u.models) if (!m.p) m.p = u.def; if (u.pts == null) { u.pts = UNITS[u.def].pts; u.wStart = u.startN * UNITS[u.def].W; } }
   if (!state.cfg.pts) state.cfg.pts = 500;
-  setMap(state.cfg.map || 'hab');
+  setMap(state.cfg.map || 'hab', state.cfg.pts);
   return state;
 }
 const pname = s => G.players[s].name;
@@ -142,7 +142,7 @@ function swapMission(s, i) {
   for (let g = 0; S.hand[s].length < 2 && g < 60; g++) { if (!S.deck[s].length) S.deck[s] = missionDeck(); const id = S.deck[s].shift(); if (id !== old && !S.hand[s].includes(id) && missionPossible(s, id)) S.hand[s].push(id); }
   log(`${pverb(s, 'swaps', 'swap')} ${MISSIONS[old].n} for new orders.`);
 }
-function quarters(s) { const q = new Set(); for (const u of unitsOf(s)) for (const m of u.models) { if (m.x === 7 || m.y === 10) continue; q.add((m.x > 7 ? 1 : 0) + (m.y > 10 ? 2 : 0)); } return q.size; }
+function quarters(s) { const q = new Set(), cx = (COLS - 1) / 2, cy = (ROWS - 1) / 2; for (const u of unitsOf(s)) for (const m of u.models) { if (m.x === cx || m.y === cy) continue; q.add((m.x > cx ? 1 : 0) + (m.y > cy ? 2 : 0)); } return q.size; }
 function missionMet(s, id) {
   const K = (G.kills || []).filter(k => k.side !== s), e = enemyOf(s), pts = G.cfg.pts;
   switch (id) {
@@ -282,7 +282,7 @@ async function resolveAttack(att, def, melee) {
     }
     if (!hits) { log(`${head}: no hits.`); continue; }
     // wound
-    const wn = M.wn, prey = !melee && (subIs(att.side, 'prey') || woundRerollOnes(att)), overc = !melee && att.overc;
+    const wn = M.wn, prey = !melee && woundRerollOnes(att), overc = !melee && att.overc;
     const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : overc ? ' (overcharge: re-roll fails)' : prey ? ' (re-roll 1s)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin || overc, rrOnes: prey });
     const wounds = wd.filter(v => v >= wn).length;
     if (!wounds) { log(`${head}: ${hits} hit${hits > 1 ? 's' : ''}, no wounds.`); continue; }

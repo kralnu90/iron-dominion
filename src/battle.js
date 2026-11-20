@@ -109,6 +109,7 @@ const Battle = {
         await this.playerTurn(G.turn, my, skipStart); skipStart = false; this.alive(my);
         if (G.over) break;
         const vp = scoreTurn(G.turn); if (vp) { log(`${pverb(G.turn, 'scores', 'score')} ${vp} VP from objectives.`); toast(`${pverb(G.turn, 'scores', 'score')} ${vp} VP`); }
+        for (const [id, v] of scoreMissions(G.turn)) { log(`${pverb(G.turn, 'completes', 'complete')} ${MISSIONS[id].n}: +${v} VP.`); toast(`${MISSIONS[id].n}: +${v} VP`); Sfx.play('win'); await sleep(Settings.fast ? 500 : 1100); this.alive(my); }
         if (G.turn !== G.first) { if (G.round >= 5) { G.over = { winner: G.vp[0] > G.vp[1] ? 0 : G.vp[1] > G.vp[0] ? 1 : -1, why: 'vp' }; break; } G.round++; }
         G.turn = enemyOf(G.turn); this.render();
       }
@@ -117,26 +118,32 @@ const Battle = {
   },
   async playerTurn(s, my, resumed) {
     if (!resumed) {
-      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false });
+      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false, rapid: false, surge: false, focus: false });
+      G.kills = [];
       for (const u of unitsOf(enemyOf(s))) Object.assign(u, { chargedNow: false, fought: false });
-      G.phase = 'command'; G.cp[0]++; G.cp[1]++; G.cmdUsed = [false, false];
+      setPhase('command'); G.cp[0]++; G.cp[1]++; G.cmdUsed = [false, false]; drawMissions(s);
       this.banner(`Round ${G.round} · ${pname(s)}`, 'Command phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
       for (const u of unitsOf(s)) {
         u.shaken = false;
         const D = UD(u), Ld = unitLd(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= MW(u.models[0]);
         if (!below) continue;
         const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${Ld}+`, n: 2, need: Ld, side: s }); this.alive(my);
-        const t = d[0] + d[1]; if (t < Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
+        const t = d[0] + d[1];
+        if (t < Ld) {
+          let hold = false;
+          if (canGamb(s, 'hold')) { if (isAI(s)) hold = onObjective(u); else if (!Tray.headless) { Tray.close(); hold = await choose(`${D.n} wavers`, `They rolled ${t} and failed the battle-shock test. Spend 1 CP on <b>Hold Fast</b> to pass it instead? You have ${G.cp[s]} CP.`, [{ l: '⚑ Hold Fast (1 CP)', v: true, p: 1 }, { l: 'Let them waver', v: false }]); this.alive(my); } }
+          if (hold) { useGamb(s, 'hold'); log(`${D.n} holds fast.`); } else { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); }
+        } else log(`${D.n} holds firm (rolled ${t}).`);
       }
       Tray.close();
     }
     if (isAI(s)) {
       await this.aiTurn(s, my);
     } else {
-      if (!resumed || G.phase === 'command') G.phase = 'move';
+      if (!resumed || G.phase === 'command') setPhase('move');
       const order = ['move', 'shoot', 'charge'];
       for (let k = order.indexOf(G.phase); k < 3 && !G.over; k++) {
-        G.phase = order[k]; this.ui = {}; this.banner(`${pname(s)}`, { move: 'Movement phase', shoot: 'Shooting phase', charge: 'Charge phase' }[G.phase]);
+        if (G.phase !== order[k]) setPhase(order[k]); this.ui = {}; this.banner(`${pname(s)}`, { move: 'Movement phase', shoot: 'Shooting phase', charge: 'Charge phase' }[G.phase]);
         Shell.save(); this.render();
         await new Promise(r => this.endPhase = r); this.alive(my);
       }
@@ -145,7 +152,7 @@ const Battle = {
   },
   async aiTurn(s, my) {
     const pause = async ms => { this.render(); await sleep(Settings.fast ? ms * .4 : ms); this.alive(my); };
-    G.phase = 'move'; this.banner(pname(s), 'Movement phase'); await pause(500);
+    setPhase('move'); this.banner(pname(s), 'Movement phase'); await pause(500);
     for (const u of unitsOf(s)) {
       if (engaged(u)) { if (!AI.isMelee(u) && expected(engagedWith(u)[0], u, true) > expected(u, engagedWith(u)[0], true)) { const b = AI.bestMove(u, 0); if (b) { moveUnit(u, b.c, b.r); u.fellBack = true; u.moved = true; log(`${UD(u).n} falls back.`); await pause(500); } } continue; }
       let adv = 0;
@@ -154,24 +161,24 @@ const Battle = {
       if (b && (b.c !== u.models[0].x || b.r !== u.models[0].y)) { moveUnit(u, b.c, b.r); u.moved = true; if (adv) log(`${UD(u).n} advances ${adv}".`); this.ui.flash = u.uid; await pause(450); }
     }
     this.ui.flash = null;
-    G.phase = 'shoot'; this.banner(pname(s), 'Shooting phase'); await pause(500);
-    for (const u of unitsOf(s)) { if (!canShoot(u)) continue; const v = AI.pickShot(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; this.render(); Sfx.play('shot'); await resolveAttack(u, v, false); u.shot = true; this.alive(my); Tray.close(); await pause(300); if (G.over) return; }
-    G.phase = 'charge'; this.ui = {}; this.banner(pname(s), 'Charge phase'); await pause(500);
-    for (const u of unitsOf(s)) { if (!canCharge(u)) continue; const v = AI.pickCharge(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; await this.doCharge(u, v, my); await pause(400); }
+    setPhase('shoot'); this.banner(pname(s), 'Shooting phase'); await pause(500);
+    for (const u of unitsOf(s)) { if (!canShoot(u)) continue; const v = AI.pickShot(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; this.render(); AI.shootGambits(u, v); Sfx.play('shot'); await resolveAttack(u, v, false); u.shot = true; this.alive(my); Tray.close(); await pause(300); if (G.over) return; }
+    setPhase('charge'); this.ui = {}; this.banner(pname(s), 'Charge phase'); await pause(500);
+    for (const u of unitsOf(s)) { AI.rapidGambit(u); if (!canCharge(u)) continue; const v = AI.pickCharge(u); if (!v) continue; AI.surgeGambit(u, v); this.ui = { sel: u.uid, aim: v.uid }; await this.doCharge(u, v, my); await pause(400); }
     this.ui = {};
   },
   async doCharge(u, v, my) {
     const need = chargeNeed(u, v), bonus = chargeBonus(u);
     const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +' + bonus : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') });
     this.alive(my); Tray.close();
-    u.charged = true;
+    u.charged = true; u.surge = false;
     const roll = d[0] + d[1] + bonus;
     if (roll >= need && chargeMove(u, v, roll)) { u.chargedNow = true; u.moved = true; log(`${UD(u).n} charges into ${UD(v).n} (rolled ${roll}).`); Sfx.play('charge'); toast(`${UD(u).n} charges home!`); }
     else { log(`${UD(u).n} fails the charge (rolled ${roll}, needed ${need}).`); toast('Charge failed'); }
     this.render();
   },
   async fightPhase(s, my) {
-    G.phase = 'fight'; this.ui = {};
+    setPhase('fight'); this.ui = {};
     const queue = () => liveUnits().filter(u => !u.fought && engaged(u));
     if (!queue().length) return;
     this.banner(pname(s), 'Fight phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
@@ -196,7 +203,8 @@ const Battle = {
     const o = G.over, w = o.winner, human = G.players.findIndex(p => p.type === 'human');
     const title = w === -1 ? 'A bloody stalemate' : G.players.every(p => p.type === 'human') ? `${pname(w)} is victorious!` : w === human ? 'Victory!' : 'Defeat';
     Sfx.play(w === human || (w >= 0 && G.players[w].type === 'human') ? 'win' : 'lose');
-    Shell.endScreen(title, `${o.why === 'wipe' ? 'An army was wiped out.' : 'Five battle rounds are over.'}<br>${pname(0)} ${G.vp[0]} VP · ${pname(1)} ${G.vp[1]} VP`);
+    const sv = s => G.sec ? ` <small>(${G.vp[s] - G.sec.vp[s]} objectives, ${G.sec.vp[s]} missions)</small>` : '';
+    Shell.endScreen(title, `${o.why === 'wipe' ? 'An army was wiped out.' : 'Five battle rounds are over.'}<br>${pname(0)} ${G.vp[0]} VP${sv(0)}<br>${pname(1)} ${G.vp[1]} VP${sv(1)}`);
   },
   /* ---------- player input ---------- */
   mySide() { return isAI(G.turn) ? null : G.turn; },
@@ -226,6 +234,14 @@ const Battle = {
     else if (a === 'shoot') { this.ui = { sel: u.uid, mode: 'shoot', targets: new Set(shootTargets(u).map(v => v.uid)) }; }
     else if (a === 'charge') { this.ui = { sel: u.uid, mode: 'charge', targets: new Set(chargeTargets(u).map(v => v.uid)) }; }
     else if (a === 'cancel') { this.ui = { sel: u.uid }; }
+    else if (a.startsWith('g_')) {
+      const id = a.slice(2); if (!canGamb(u.side, id)) return;
+      useGamb(u.side, id);
+      if (id === 'focus') { u.focus = true; toast(`${UD(u).n}: +1 to hit this phase`); }
+      else if (id === 'oath') { u.oath = false; toast(`${UD(u).n} renews its Oath of Iron`); }
+      else if (id === 'rapid') { u.rapid = true; toast(`${UD(u).n} can charge this turn`); }
+      else if (id === 'surge') { u.surge = true; toast(`${UD(u).n}: +2 to its charge roll`); }
+    }
     this.render();
   },
   async fire(v) {
@@ -245,6 +261,7 @@ const Battle = {
     const col = s => ARMIES[G.players[s].army].col, dark = s => ARMIES[G.players[s].army].dark;
     let tiles = '';
     for (const [k, t] of Object.entries(TERRAIN)) { const [c, r] = k.split(',').map(Number); tiles += `<div class="terr t-${t}" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px"></div>`; }
+    if (G.round === 1 && G.phase !== 'fight') for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) for (const sd of [0, 1]) if (inZone(sd, c, r, G.cfg.pts)) tiles += `<div class="zone" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px;background:${col(sd)}"></div>`;
     if (ui.reach) for (const k of ui.reach) { const [c, r] = k.split(',').map(Number); tiles += `<div class="reach" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px"></div>`; }
     const objs = OBJECTIVES.map(([c, r], i) => `<div class="obj" style="left:${(c - 1.1) * cell}px;top:${(r - 1.1) * cell}px;width:${cell * 3.2}px;height:${cell * 3.2}px;border-color:${ctl[i] >= 0 ? col(ctl[i]) : 'rgba(255,255,255,.35)'};background:${ctl[i] >= 0 ? col(ctl[i]) + '22' : 'transparent'}"><span style="background:${ctl[i] >= 0 ? col(ctl[i]) : '#777'}">${i + 1}</span></div>`).join('');
     const models = liveUnits().map(u => {
@@ -255,7 +272,7 @@ const Battle = {
     root.innerHTML = `
       <div class="hud">
         <div class="side s0" style="--c:${col(0)}"><b>${pname(0)}</b><span>${G.vp[0]} VP · ${G.cp[0]} CP</span></div>
-        <div class="rnd"><b>Round ${G.round}/5</b><span>${{ command: 'Command', move: 'Movement', shoot: 'Shooting', charge: 'Charge', fight: 'Fight' }[G.phase] || ''}</span></div>
+        <div class="rnd" onclick="Shell.missions()"><b>Round ${G.round}/5 <i class="mi">📜</i></b><span>${{ command: 'Command', move: 'Movement', shoot: 'Shooting', charge: 'Charge', fight: 'Fight' }[G.phase] || ''}</span></div>
         <div class="side s1" style="--c:${col(1)}"><b>${pname(1)}</b><span>${G.vp[1]} VP · ${G.cp[1]} CP</span></div>
       </div>
       <div class="board-wrap"><div id="board" class="board" style="width:${cell * COLS}px;height:${cell * ROWS}px;background-size:${cell}px ${cell}px">${tiles}${objs}${models}<div id="bf-banner" class="banner">${this.bannerText ? `<b>${this.bannerText[0]}</b><span>${this.bannerText[1]}</span>` : ''}</div></div></div>
@@ -288,8 +305,8 @@ const Battle = {
         if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
         else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
-      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🎯 Shoot', 'gold'); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
-      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold'); else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
+      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
+      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold') + (!u.surge && canGamb(s, 'surge') ? B('g_surge', '⚙ Scrap Surge · 1 CP', 'gmb') : ''); else if (u.advanced && !u.rapid && !u.charged && !engaged(u) && !u.fellBack && chargeTargets(u).length && canGamb(s, 'rapid')) { act = B('g_rapid', '⇶ Rapid Assault · 1 CP', 'gmb'); hint = 'This unit advanced. Rapid Assault lets it charge anyway.'; } else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;
     const next = { move: 'End movement →', shoot: 'End shooting →', charge: 'End charges → Fight' }[G.phase];
     return `${hint ? `<div class="msg">${hint}</div>` : ''}<div class="acts">${act}${B('end', next, 'end')}</div>${this.unitCard(vu)}`;

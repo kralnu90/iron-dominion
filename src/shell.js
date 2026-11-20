@@ -3,11 +3,12 @@
    IRON DOMINION: settings, sound, menus, saves (the Kralnu Standard shell)
    ============================================================================ */
 const Store = { get(k, d) { try { const v = localStorage.getItem('idom_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('idom_' + k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem('idom_' + k); } catch (e) {} } };
-const Settings = Object.assign({ music: 35, sfx: 70, quick: false, fast: false, diff: 'normal' }, Store.get('settings', {}));
+const Settings = Object.assign({ music: 35, sfx: 70, quick: false, fast: false, diff: 'normal', map: 'random' }, Store.get('settings', {}));
 const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.3.0', '20 Nov 2026', 'Tactics', ['Gambits: spend command points on Focused Fire, Rapid Assault, Go to Ground, Hold Fast, plus one special order per army', 'Secondary missions: hold two mission cards and score them for bonus VP; swap one for 1 CP', 'Three battlefields: the Ruined Hab-Block, the Crossroads and the Pincer (deploy from opposite corners)', 'Deployment zones are shaded in round 1, and the end screen splits objective and mission VP']],
   ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
   ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
 ];
@@ -49,7 +50,7 @@ const Shell = {
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
       <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 2: Muster</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 3a: Tactics</div></div>`);
   },
   async play(fromList) {
     const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
@@ -64,7 +65,7 @@ const Shell = {
     const l2 = mode === 'ai' ? randomList(other, pts) : await this.pickList(other, pts, 'Player 2');
     if (!l2) return;
     const players = mode === 'ai' ? [{ name: 'You', army, type: 'human', list: l1 }, { name: 'The AI', army: other, type: 'ai', list: l2 }] : [{ name: 'Player 1', army, type: 'human', list: l1 }, { name: 'Player 2', army: other, type: 'human', list: l2 }];
-    this.startBattle({ players, diff: Settings.diff, pts });
+    this.startBattle({ players, diff: Settings.diff, pts, map: Settings.map });
   },
   async pickList(army, pts, who) {
     const mine = Muster.all().filter(L => L.army === army && L.pts === pts && !listProblems(L).length), opts = [];
@@ -88,6 +89,19 @@ const Shell = {
     const v = await choose('Paused', '', [{ l: '▶ Resume', v: 'r', p: 1 }, { l: '⚙ Settings', v: 's' }, { l: '? How to play', v: 'h' }, { l: '🏠 Main menu', v: 'm' }]);
     if (v === 's') this.settings(true); else if (v === 'h') this.howto(); else if (v === 'm') { this.save(); this.menu(); }
   },
+  missions() {
+    if (!G || !G.sec) return toast('Missions are drawn at the start of each turn.');
+    const me = !isAI(G.turn) ? G.turn : G.players.findIndex(p => p.type === 'human'), s = me < 0 ? 0 : me, o = enemyOf(s), S = G.sec;
+    const canSwap = s === G.turn && !isAI(s) && !S.swapped[s] && G.cp[s] >= 1 && ['move', 'shoot', 'charge'].includes(G.phase);
+    const card = (id, i, mine) => `<div class="mcard"><div><span class="vp">${MISSIONS[id].vp} VP</span><b>${MISSIONS[id].n}</b></div><div class="small">${MISSIONS[id].txt}</div>${mine && canSwap ? `<button class="b" style="align-self:flex-end" onclick="Shell.swap(${i})">↻ New orders · 1 CP</button>` : ''}</div>`;
+    const gl = Object.values(GAMBITS).filter(g => !g.army || g.army === G.players[s].army).map(g => `<div class="gref"><b>${g.ic} ${g.n} · ${g.cp} CP</b> <span class="small">${g.when}.</span> ${g.txt}</div>`).join('');
+    sheet(`<h2>📜 ${pname(s) === 'You' ? 'Your' : pname(s) + "'s"} missions</h2>
+      <p class="small">Score them at the end of your turn for bonus VP. ${S.vp[s]} VP from missions so far. ${S.swapped[s] ? 'You have already changed orders this turn.' : 'Once per turn you can swap one for 1 CP.'}</p>
+      ${S.hand[s].map((id, i) => card(id, i, true)).join('') || '<p class="small">New missions are drawn at the start of your turn.</p>'}
+      <h3>${pname(o)}'s missions</h3>${S.hand[o].map(id => card(id, 0, false)).join('') || '<p class="small">None held right now.</p>'}
+      <h3>Gambits <small>(you have ${G.cp[s]} CP)</small></h3>${gl}<p class="small">Each Gambit can be used once per phase. Buttons appear on a unit's panel when one can be played, and you'll be asked when one can be used during the enemy's turn.</p>`);
+  },
+  swap(i) { const s = G.turn; if (isAI(s) || G.sec.swapped[s] || G.cp[s] < 1) return; swapMission(s, i); Sfx.play('tap'); this.missions(); },
   async endScreen(title, msg) {
     const v = await choose(title, msg, [{ l: '⚔ Battle again', v: 'a', p: 1 }, { l: '🏠 Main menu', v: 'm' }, { l: 'Look at the field', v: 's' }]);
     if (v === 'a') this.startBattle(G.cfg); else if (v === 'm') this.menu();
@@ -99,7 +113,8 @@ const Shell = {
       ${toggle('quick', 'Dice', 'Quick (rolled for you)', 'Hands-on (roll them yourself)')}
       ${toggle('fast', 'Game speed', 'Fast', 'Normal')}
       <label class="set"><span>AI general</span><select onchange="Settings.diff=this.value;saveSettings()">${['easy', 'normal', 'hard'].map(d => `<option value="${d}" ${Settings.diff === d ? 'selected' : ''}>${d[0].toUpperCase() + d.slice(1)}</option>`).join('')}</select></label>
-      <p class="small">The AI setting applies from the next battle.</p>
+      <label class="set"><span>Battlefield</span><select onchange="Settings.map=this.value;saveSettings()"><option value="random">Random</option>${Object.entries(MAPS).map(([k, m]) => `<option value="${k}" ${Settings.map === k ? 'selected' : ''}>${m.n}</option>`).join('')}</select></label>
+      <p class="small">The AI and battlefield settings apply from the next battle.</p>
       <button class="b danger" onclick="Shell.reset()">Reset save data</button>`);
   },
   async reset() { const v = await choose('Reset save data?', 'This deletes your battle in progress and your settings.', [{ l: 'Delete', v: 1 }, { l: 'Keep', v: 0, p: 1 }]); if (v) { Store.del('save'); Store.del('settings'); location.reload(); } },
@@ -123,6 +138,9 @@ const Shell = {
       <li><b>Fight:</b> every unit in combat fights, chargers first.</li></ol>
       <p><b>The dice:</b> roll to hit (the weapon's skill or better), sweep away the misses, roll to wound (Strength against Toughness), then the defender rolls saves (worsened by AP). Each unsaved wound deals the weapon's Damage. Re-rolls show up as buttons: tap them, or spend 1 CP on a command re-roll and tap the die you want again.</p>
       <p><b>Objectives:</b> a marker belongs to the side with the most Objective Control (OC) within 3". From round 2, at the end of your turn you score 5 VP for holding one, 5 more for holding two or more, and 5 more for holding more than the enemy.</p>
+      <p><b>Battlefields:</b> three maps with their own terrain, objectives and deployment zones (shaded in round 1). Pick one in Settings or leave it on Random.</p>
+      <p><b>Gambits:</b> spend command points on special orders such as Focused Fire (+1 to hit), Rapid Assault (charge after advancing), Go to Ground (+1 save when shot) and Hold Fast (pass a battle-shock test). Each one works once per phase. Tap the round box at the top to see them all.</p>
+      <p><b>Secondary missions:</b> you hold two mission cards, such as Assassinate or Behind Enemy Lines. Complete one by the end of your turn for 3 to 5 bonus VP, then draw a new one. Tap the 📜 round box to see your cards, and swap one for 1 CP if it's out of reach.</p>
       <p><b>Muster:</b> build your own armies from the main menu. Spend points on units, pick squad sizes and swap wargear for free. Every list needs a Leader.</p>
       <p><b>Leaders</b> can join a squad (gold-ringed on the field). The squad keeps its own stats, the leader takes wounds last, and the squad gets the leader's bonus. If the squad dies, the leader fights on alone.</p>
       <p><b>Sub-factions:</b> each army picks one, and its rule covers the whole army. Tap any unit to see your army's rule on its card.</p>

@@ -102,6 +102,11 @@ body.in-battle{overflow-x:hidden}
 .mdl{position:absolute;border-radius:50%;border:2px solid rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;line-height:1;box-shadow:0 2px 4px rgba(0,0,0,.6);transition:left .35s ease,top .35s ease}
 .mdl.veh{border-radius:22%}
 .mdl.ldr{border-color:var(--gold);border-width:3px}
+.zone{position:absolute;opacity:.13;pointer-events:none}
+.b.gmb{background:#2a2140;border-color:#7a62b8;font-size:13px}
+.rnd{cursor:pointer}.rnd .mi{font-style:normal;font-size:12px}
+.mcard{background:#1d1714;border:1px solid #7a62b8;border-radius:12px;padding:10px;margin:6px 0;display:flex;flex-direction:column;gap:4px}.mcard b{color:#c9b6ff}.mcard .vp{float:right;color:var(--gold);font-weight:800}
+.gref{font-size:12px;margin:4px 0}.gref b{color:#c9b6ff}
 .rule.sub-line{color:var(--dim)}
 .mdl.sel{box-shadow:0 0 0 3px #fff,0 0 12px #fff}
 .mdl.view{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
@@ -156,7 +161,7 @@ body.in-battle{overflow-x:hidden}
    IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
    Distances are in inches; the board is a grid of 2" squares.
    ============================================================================ */
-const GAME_VERSION = '0.2.0';
+const GAME_VERSION = '0.3.0';
 const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
 
 /* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
@@ -233,7 +238,7 @@ const UNITS = {
   wrenchwright: { n: 'Wrenchwright', role: 'Leader', pts: 45, ic: '⚙', M: 6, T: 5, Sv: 4, W: 4, Ld: 7, OC: 1,
     models: [[1, ['sparkWelder'], ['bigWrench']]],
     lead: { id: 'saveUp', n: 'Bolted-On Plates', txt: 'The unit adds 1 to its armour saves (best 3+).' }, leads: ['rustbornMob', 'smogGunners'] },
-  rustbornMob: { n: 'Rustborn Mob', role: 'Core troops', pts: 80, ic: '☗', M: 6, T: 4, Sv: 5, W: 1, Ld: 7, OC: 2,
+  rustbornMob: { n: 'Rustborn Mob', role: 'Core troops', pts: 80, ic: '☗', M: 6, T: 5, Sv: 5, W: 1, Ld: 7, OC: 2,
     models: [[8, ['scrapPistol'], ['hacker']], [1, ['scrapPistol'], ['hacker']], [1, ['scrapPistol'], ['smasher']]],
     sizes: [{ n: 10, pts: 80 }, { n: 20, pts: 150 }],
     opts: [{ id: 'heavy', n: 'Mob gunner', x2: 1, g: 1, f: 'guns', ch: [['scrapPistol'], ['spikeLauncher']] }, { id: 'boss', n: 'Mob boss', g: 2, f: 'melee', ch: [['smasher'], ['wreckerClaw']] }] },
@@ -272,16 +277,55 @@ const ARMIES = {
     list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'], leadsInto: 1, sub: 'gut' }
 };
 
-/* Battlefield: rotationally symmetric so both sides get the same ground. */
-const OBJECTIVES = [[7, 10], [7, 3], [7, 17], [2, 10], [12, 10]];
-const TERRAIN = (() => {
-  const t = {};
-  const add = (type, cells) => cells.forEach(([c, r]) => { t[c + ',' + r] = type; t[(COLS - 1 - c) + ',' + (ROWS - 1 - r)] = type; });
-  add('ruin', [[3, 7], [4, 7], [3, 8], [9, 5], [10, 5], [10, 6], [0, 12], [1, 12]]);
-  add('crater', [[6, 9], [5, 11]]);
-  add('wall', [[7, 7], [12, 13], [13, 13], [2, 4], [3, 4]]);
-  return t;
-})();
+/* Battlefields: each is rotationally symmetric so both sides get the same ground.
+   Objective 1 is always the centre. zone: 'lines' (deploy along the short edges) or 'corners' (opposite corners). */
+const MAPS = {
+  hab: { n: 'Ruined Hab-Block', blurb: 'Battle lines face off across the shattered habs.', zone: 'lines',
+    obj: [[7, 10], [7, 3], [7, 17], [2, 10], [12, 10]],
+    terr: { ruin: [[3, 7], [4, 7], [3, 8], [9, 5], [10, 5], [10, 6], [0, 12], [1, 12]], crater: [[6, 9], [5, 11]], wall: [[7, 7], [12, 13], [13, 13], [2, 4], [3, 4]] } },
+  cross: { n: 'The Crossroads', blurb: 'Two highways meet in a wrecked junction. Hold the flanks.', zone: 'lines',
+    obj: [[7, 10], [7, 4], [7, 16], [2, 7], [12, 13]],
+    terr: { ruin: [[5, 5], [6, 5], [5, 6], [10, 7], [11, 7], [0, 9], [1, 9], [13, 8]], crater: [[7, 7], [4, 12]], wall: [[2, 4], [3, 4], [9, 10], [12, 2]] } },
+  pincer: { n: 'The Pincer', blurb: 'The armies arrive from opposite corners. Every flank is open.', zone: 'corners',
+    obj: [[7, 10], [3, 5], [11, 15], [12, 4], [2, 16]],
+    terr: { ruin: [[6, 3], [6, 4], [9, 6], [10, 6], [4, 9], [4, 10], [13, 9]], crater: [[7, 8], [1, 12]], wall: [[8, 1], [9, 1], [3, 14], [11, 9]] } }
+};
+let OBJECTIVES = MAPS.hab.obj, TERRAIN = {}, MAP_ID = 'hab';
+function setMap(id) {
+  MAP_ID = MAPS[id] ? id : 'hab'; const M = MAPS[MAP_ID], t = {};
+  for (const [type, cells] of Object.entries(M.terr)) cells.forEach(([c, r]) => { t[c + ',' + r] = type; t[(COLS - 1 - c) + ',' + (ROWS - 1 - r)] = type; });
+  OBJECTIVES = M.obj; TERRAIN = t;
+}
+setMap('hab');
+/* is a square inside a side's deployment zone? side 1 deploys at the top, side 0 at the bottom */
+function inZone(side, x, y, pts = 500, extra = 0) {
+  const depth = (POINTS.find(p => p.pts === pts) || POINTS[0]).depth + extra;
+  if (side === 0) { x = COLS - 1 - x; y = ROWS - 1 - y; }
+  if (MAPS[MAP_ID].zone === 'corners') { const a = depth * 2 + 1, b = depth * 3 + 1; return y + x * (a / b) <= a; }
+  return y <= depth - 1;
+}
+
+/* Gambits: spend command points (CP) on special orders. Each one can be used once per phase by each player. */
+const GAMBITS = {
+  focus: { n: 'Focused Fire', ic: '🎯', cp: 1, when: 'Your shooting phase, before a unit shoots', txt: 'That unit adds 1 to its hit rolls with ranged attacks this phase.' },
+  rapid: { n: 'Rapid Assault', ic: '⇶', cp: 1, when: 'Your charge phase', txt: 'A unit that advanced this turn can still charge.' },
+  ground: { n: 'Go to Ground', ic: '⛉', cp: 1, when: 'When an enemy unit shoots one of your units', txt: 'Your unit counts as being in cover (+1 save) against those attacks.' },
+  hold: { n: 'Hold Fast', ic: '⚑', cp: 1, when: 'When one of your units fails a battle-shock test', txt: 'It passes instead.' },
+  oath: { n: 'Renewed Oath', ic: '⚜', cp: 1, army: 'covenant', when: 'Your shooting phase, before a unit shoots', txt: 'A unit that has used its Oath of Iron can use it again.' },
+  surge: { n: 'Scrap Surge', ic: '⚙', cp: 1, army: 'rust', when: 'Your charge phase, before a unit charges', txt: 'Add 2 to that charge roll.' }
+};
+
+/* Secondary missions: each player holds two at a time and scores them at the end of their own turn. */
+const MISSIONS = {
+  assassinate: { n: 'Assassinate', vp: 5, txt: 'Slay an enemy Leader this turn.' },
+  bringdown: { n: 'Bring It Down', vp: 5, txt: 'Destroy an enemy Walker this turn.' },
+  noprisoners: { n: 'No Prisoners', vp: 4, txt: 'Destroy two or more enemy units this turn.' },
+  overwhelm: { n: 'Overwhelm', vp: 4, txt: 'Destroy an enemy unit that was holding an objective.' },
+  behind: { n: 'Behind Enemy Lines', vp: 4, txt: 'End your turn with a unit in the enemy deployment zone.' },
+  fronts: { n: 'Engage on All Fronts', vp: 3, txt: 'End your turn with units in three table quarters (4 VP for all four).' },
+  nomans: { n: "Secure No Man's Land", vp: 4, txt: 'End your turn controlling two objectives outside both deployment zones.' },
+  denial: { n: 'Area Denial', vp: 4, txt: 'End your turn with a unit within 3" of the centre objective and no enemies within 6" of it.' }
+};
 const TERRAIN_INFO = { ruin: { n: 'Ruins', cover: 1, blocks: 1 }, crater: { n: 'Crater', cover: 1, blocks: 0 }, wall: { n: 'Barricade', cover: 1, blocks: 0 } };
 /* ============================================================================
    IRON DOMINION: Muster. Army lists (points, squad sizes, wargear, leaders),
@@ -493,6 +537,8 @@ function makeUnit(e, side, leaders = []) {
 }
 function newBattle(cfg) {
   NEXT_ID = 1; cfg.pts = cfg.pts || 500;
+  if (!MAPS[cfg.map]) cfg.map = Object.keys(MAPS)[Math.floor(Math.random() * Object.keys(MAPS).length)];
+  setMap(cfg.map);
   G = { cfg, round: 1, turn: 0, phase: 'command', cp: [0, 0], vp: [0, 0], players: cfg.players, units: [], log: [], over: null, first: 0, cmdUsed: [false, false], score: [[], []] };
   cfg.players.forEach((p, s) => {
     const L = p.list = p.list || starterList(p.army);
@@ -500,6 +546,7 @@ function newBattle(cfg) {
     L.units.forEach(e => { if (!leaders.includes(e)) G.units.push(makeUnit(e, s, leaders.filter(l => l.at === e.k))); });
   });
   cfg.players.forEach((p, s) => { const x = subOf(s); log(`${p.name}: ${p.list.name}, ${x ? x.n : ARMIES[p.army].short} (${listPts(p.list)} pts).`); });
+  log(`The battlefield: ${MAPS[cfg.map].n}.`);
   deploy(0); deploy(1);
   G.first = G.turn = Math.random() < .5 ? 0 : 1;
   log(`${pverb(G.first, 'wins', 'win')} the roll-off and takes the first turn.`);
@@ -509,6 +556,7 @@ function newBattle(cfg) {
 function migrate(state) {
   for (const u of state.units) { for (const m of u.models) if (!m.p) m.p = u.def; if (u.pts == null) { u.pts = UNITS[u.def].pts; u.wStart = u.startN * UNITS[u.def].W; } }
   if (!state.cfg.pts) state.cfg.pts = 500;
+  setMap(state.cfg.map || 'hab');
   return state;
 }
 const pname = s => G.players[s].name;
@@ -538,21 +586,68 @@ function formation(u, anchor, ok) {
   return true;
 }
 function deploy(side) {
-  const depth = (POINTS.find(p => p.pts === G.cfg.pts) || POINTS[0]).depth;
-  const zone = d => (x, y) => side === 1 ? y <= d - 1 : y >= ROWS - d;
+  const pts = G.cfg.pts, corners = MAPS[MAP_ID].zone === 'corners';
   const us = G.units.filter(u => u.side === side);
-  const slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2], [3, 3], [11, 3]];
-  const all = []; for (let r = 0; r < depth + 1; r++) for (let c = 0; c < COLS; c++) all.push([c, r]);
-  all.sort((a, b) => Math.abs(a[0] - 7) - Math.abs(b[0] - 7) + (b[1] - a[1]) * .3);
+  const slots = corners ? [] : [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2], [3, 3], [11, 3]];
+  const all = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) all.push([c, r]);
+  if (corners) all.sort((a, b) => Math.hypot(a[0] - 3, a[1] - 3.5) - Math.hypot(b[0] - 3, b[1] - 3.5));
+  else all.sort((a, b) => Math.abs(a[0] - 7) - Math.abs(b[0] - 7) + (b[1] - a[1]) * .3);
   us.forEach((u, i) => {
-    const cands = [slots[i % slots.length]].concat(all);
-    let ok = false;
-    for (const d of [depth, depth + 1, depth + 2]) {
-      for (let [c, r] of cands) { if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; } if (formation(u, { x: c, y: r }, zone(d))) { ok = true; break; } }
+    const cands = (slots.length ? [slots[i % slots.length]] : []).concat(all);
+    for (const extra of [0, 1, 2]) {
+      let ok = false;
+      for (let [c, r] of cands) { if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; } if (!inZone(side, c, r, pts, extra)) continue; if (formation(u, { x: c, y: r }, (x, y) => inZone(side, x, y, pts, extra))) { ok = true; break; } }
       if (ok) break;
     }
   });
 }
+/* ---------- phases and Gambits ---------- */
+function setPhase(p) { G.phase = p; G.gamb = [{}, {}]; for (const u of G.units) u.focus = false; }
+const canGamb = (s, id) => { const g = GAMBITS[id]; return G.cp[s] >= g.cp && !(G.gamb && G.gamb[s][id]) && (!g.army || G.players[s].army === g.army); };
+function useGamb(s, id) { G.gstat = G.gstat || {}; G.gstat[id] = (G.gstat[id] || 0) + 1; G.cp[s] -= GAMBITS[id].cp; G.gamb = G.gamb || [{}, {}]; G.gamb[s][id] = true; log(`${pverb(s, 'uses', 'use')} ${GAMBITS[id].n}.`); Sfx.play('tap'); }
+/* ---------- secondary missions ---------- */
+function missionDeck() { const d = Object.keys(MISSIONS); for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+function missionPossible(s, id) {
+  const e = unitsOf(enemyOf(s));
+  if (id === 'bringdown') return e.some(u => UD(u).vehicle);
+  if (id === 'assassinate') return e.some(u => u.models.some(m => UNITS[m.p].role === 'Leader'));
+  return true;
+}
+function drawMissions(s) {
+  const S = G.sec = G.sec || { hand: [[], []], deck: [missionDeck(), missionDeck()], vp: [0, 0], done: [[], []], swapped: [false, false] };
+  S.swapped[s] = false; S.hand[s] = S.hand[s].filter(id => missionPossible(s, id));
+  for (let g = 0; S.hand[s].length < 2 && g < 60; g++) {
+    if (!S.deck[s].length) S.deck[s] = missionDeck();
+    const id = S.deck[s].shift(); if (!S.hand[s].includes(id) && missionPossible(s, id)) S.hand[s].push(id);
+  }
+}
+function swapMission(s, i) {
+  const S = G.sec, old = S.hand[s][i]; G.cp[s]--; S.swapped[s] = true; S.hand[s].splice(i, 1);
+  for (let g = 0; S.hand[s].length < 2 && g < 60; g++) { if (!S.deck[s].length) S.deck[s] = missionDeck(); const id = S.deck[s].shift(); if (id !== old && !S.hand[s].includes(id) && missionPossible(s, id)) S.hand[s].push(id); }
+  log(`${pverb(s, 'swaps', 'swap')} ${MISSIONS[old].n} for new orders.`);
+}
+function quarters(s) { const q = new Set(); for (const u of unitsOf(s)) for (const m of u.models) { if (m.x === 7 || m.y === 10) continue; q.add((m.x > 7 ? 1 : 0) + (m.y > 10 ? 2 : 0)); } return q.size; }
+function missionMet(s, id) {
+  const K = (G.kills || []).filter(k => k.side !== s), e = enemyOf(s), pts = G.cfg.pts;
+  switch (id) {
+    case 'assassinate': return K.some(k => k.leader) ? 5 : 0;
+    case 'bringdown': return K.some(k => k.vehicle) ? 5 : 0;
+    case 'noprisoners': return K.filter(k => k.unit).length >= 2 ? 4 : 0;
+    case 'overwhelm': return K.some(k => k.unit && k.onObj) ? 4 : 0;
+    case 'behind': return unitsOf(s).some(u => !u.shaken && u.models.some(m => inZone(e, m.x, m.y, pts))) ? 4 : 0;
+    case 'fronts': { const n = quarters(s); return n >= 4 ? 4 : n >= 3 ? 3 : 0; }
+    case 'nomans': { const ctl = objControl(); return OBJECTIVES.filter(([c, r], i) => ctl[i] === s && !inZone(0, c, r, pts) && !inZone(1, c, r, pts)).length >= 2 ? 4 : 0; }
+    case 'denial': { const [c, r] = OBJECTIVES[0], near = (side, d) => unitsOf(side).some(u => u.models.some(m => Math.hypot(m.x - c, m.y - r) * SQ <= d)); return near(s, 3.2) && !near(e, 6) ? 4 : 0; }
+  }
+  return 0;
+}
+function scoreMissions(s) {
+  const S = G.sec; if (!S) return [];
+  const out = [];
+  for (const id of S.hand[s].slice()) { const vp = missionMet(s, id); if (vp) { G.vp[s] += vp; S.vp[s] += vp; S.done[s].push(id); S.hand[s].splice(S.hand[s].indexOf(id), 1); out.push([id, vp]); } }
+  return out;
+}
+const onObjective = u => OBJECTIVES.some(([c, r]) => u.models.some(m => Math.hypot(m.x - c, m.y - r) <= 1.6));
 function engagedWith(u) { const out = new Set(); for (const v of liveUnits()) if (v.side !== u.side) for (const a of u.models) for (const b of v.models) if (cheb(a, b) <= 1) out.add(v); return [...out]; }
 const engaged = u => engagedWith(u).length > 0;
 function unitDistIn(u, v) { let d = 1e9; for (const a of u.models) for (const b of v.models) d = Math.min(d, sqd(a, b)); return d * SQ; }
@@ -603,7 +698,7 @@ function atkMods(att, def, w, melee, g) {
   const wn = Math.max(2, woundNeed(S, UD(def).T) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
   const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0);
   const heavy = !melee && w.kw.heavy && stationary(att), haze = !melee && g && g.far && subIs(def.side, 'haze');
-  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0)) + (haze ? 1 : 0));
+  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0) - (!melee && att.focus ? 1 : 0)) + (haze ? 1 : 0));
   return { S, wn, AP, need, heavy, haze };
 }
 /* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
@@ -623,8 +718,8 @@ function meleeGroups(att) { const g = {}; for (const m of att.models) for (const
 function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
-function canCharge(u) { return u.models.length && !u.advanced && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
-function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b); }
+function canCharge(u) { return u.models.length && (!u.advanced || u.rapid) && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
+function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b) + (u.surge ? 2 : 0); }
 const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
 function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rerollOnes') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 /* expected damage (for the AI and the hint line) */
@@ -645,7 +740,14 @@ function expected(att, def, melee) {
 
 /* ---------- resolving an attack (dice go through the Tray) ---------- */
 async function resolveAttack(att, def, melee) {
-  const groups = melee ? meleeGroups(att) : shootingGroups(att, def), cover = !melee && inCover(def, att);
+  const groups = melee ? meleeGroups(att) : shootingGroups(att, def), onObj = onObjective(def);
+  let cover = !melee && inCover(def, att);
+  if (!melee && !cover && canGamb(def.side, 'ground') && groups.length) {
+    let use = false;
+    if (isAI(def.side)) use = expected(att, def, false) >= Math.max(2, def.models.reduce((a, m) => a + m.w, 0) * .3) && (G.cp[def.side] >= 2 || !!def.lead || UD(def).role === 'Leader' || UD(def).vehicle);
+    else if (!Tray.headless) { Tray.close(); use = await choose(`${UD(def).n} under fire!`, `${UD(att).n} is shooting at them. Spend 1 CP on <b>Go to Ground</b>? They count as in cover (+1 save) against this attack. You have ${G.cp[def.side]} CP.`, [{ l: '⛉ Go to Ground (1 CP)', v: true, p: 1 }, { l: 'No', v: false }]); }
+    if (use) { useGamb(def.side, 'ground'); cover = true; if (!Tray.headless) toast(`${UD(def).n} goes to ground`); }
+  }
   let killed = 0;
   for (const g of groups) {
     if (!def.models.length) break;
@@ -693,7 +795,7 @@ async function resolveAttack(att, def, melee) {
     const msg = `${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, ${fails} unsaved, ${before - def.models.length} model${before - def.models.length === 1 ? '' : 's'} slain.`;
     log(msg); await Tray.result(msg, def);
   }
-  if (!def.models.length) { log(`${UD(def).n} is wiped out!`); Sfx.play('lose'); }
+  if (!def.models.length) { log(`${UD(def).n} is wiped out!`); Sfx.play('lose'); (G.kills = G.kills || []).push({ side: def.side, unit: 1, vehicle: !!UD(def).vehicle, onObj }); }
   checkWipe();
   return killed;
 }
@@ -701,7 +803,7 @@ function allocate(def, dmg) {
   // wounded models take damage first, then plain models, specialists, and an attached leader last
   const ms = def.models, body = ms.filter(x => !x.ldr);
   const m = body.find(x => x.w < MW(x)) || body.filter(x => !x.spec).slice(-1)[0] || body.slice(-1)[0] || ms.find(x => x.w < MW(x)) || ms[ms.length - 1];
-  m.w -= dmg; if (m.w <= 0) ms.splice(ms.indexOf(m), 1);
+  m.w -= dmg; if (m.w <= 0) { ms.splice(ms.indexOf(m), 1); if (UNITS[m.p].role === 'Leader') (G.kills = G.kills || []).push({ side: def.side, leader: 1 }); }
   if (ms.length && !ms.some(x => !x.ldr)) { // the bodyguard is gone: the leader fights on alone
     log(`${UD(def).n} falls. ${UNITS[def.lead].n} fights on alone.`);
     def.def = def.lead; def.lead = null; def.startN = ms.length; ms.forEach(x => { x.ldr = false; x.spec = false; });
@@ -791,6 +893,16 @@ const AI = {
     }
     return best && best.s > .8 ? best.v : null;
   },
+  shootGambits(u, v) {
+    const s = u.side, e = expected(u, v, false);
+    if (e >= 3 && canGamb(s, 'focus')) { useGamb(s, 'focus'); u.focus = true; }
+    if (u.oath && e >= 3 && G.cp[s] >= 2 && canGamb(s, 'oath')) { useGamb(s, 'oath'); u.oath = false; }
+  },
+  rapidGambit(u) {
+    if (!u.models.length || !u.advanced || u.charged || u.fellBack || engaged(u) || !AI.isMelee(u) || !canGamb(u.side, 'rapid') || !chargeTargets(u).length) return;
+    u.rapid = true; if (AI.pickCharge(u)) useGamb(u.side, 'rapid'); else u.rapid = false;
+  },
+  surgeGambit(u, v) { if (canGamb(u.side, 'surge') && chargeNeed(u, v) - chargeBonus(u) >= 8) { useGamb(u.side, 'surge'); u.surge = true; } },
   pickFight(u) { let best = null; for (const v of engagedWith(u)) { const s = expected(u, v, true); if (!best || s > best.s) best = { v, s }; } return best ? best.v : null; }
 };
 
@@ -904,6 +1016,7 @@ const Battle = {
         await this.playerTurn(G.turn, my, skipStart); skipStart = false; this.alive(my);
         if (G.over) break;
         const vp = scoreTurn(G.turn); if (vp) { log(`${pverb(G.turn, 'scores', 'score')} ${vp} VP from objectives.`); toast(`${pverb(G.turn, 'scores', 'score')} ${vp} VP`); }
+        for (const [id, v] of scoreMissions(G.turn)) { log(`${pverb(G.turn, 'completes', 'complete')} ${MISSIONS[id].n}: +${v} VP.`); toast(`${MISSIONS[id].n}: +${v} VP`); Sfx.play('win'); await sleep(Settings.fast ? 500 : 1100); this.alive(my); }
         if (G.turn !== G.first) { if (G.round >= 5) { G.over = { winner: G.vp[0] > G.vp[1] ? 0 : G.vp[1] > G.vp[0] ? 1 : -1, why: 'vp' }; break; } G.round++; }
         G.turn = enemyOf(G.turn); this.render();
       }
@@ -912,26 +1025,32 @@ const Battle = {
   },
   async playerTurn(s, my, resumed) {
     if (!resumed) {
-      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false });
+      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false, rapid: false, surge: false, focus: false });
+      G.kills = [];
       for (const u of unitsOf(enemyOf(s))) Object.assign(u, { chargedNow: false, fought: false });
-      G.phase = 'command'; G.cp[0]++; G.cp[1]++; G.cmdUsed = [false, false];
+      setPhase('command'); G.cp[0]++; G.cp[1]++; G.cmdUsed = [false, false]; drawMissions(s);
       this.banner(`Round ${G.round} · ${pname(s)}`, 'Command phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
       for (const u of unitsOf(s)) {
         u.shaken = false;
         const D = UD(u), Ld = unitLd(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= MW(u.models[0]);
         if (!below) continue;
         const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${Ld}+`, n: 2, need: Ld, side: s }); this.alive(my);
-        const t = d[0] + d[1]; if (t < Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
+        const t = d[0] + d[1];
+        if (t < Ld) {
+          let hold = false;
+          if (canGamb(s, 'hold')) { if (isAI(s)) hold = onObjective(u); else if (!Tray.headless) { Tray.close(); hold = await choose(`${D.n} wavers`, `They rolled ${t} and failed the battle-shock test. Spend 1 CP on <b>Hold Fast</b> to pass it instead? You have ${G.cp[s]} CP.`, [{ l: '⚑ Hold Fast (1 CP)', v: true, p: 1 }, { l: 'Let them waver', v: false }]); this.alive(my); } }
+          if (hold) { useGamb(s, 'hold'); log(`${D.n} holds fast.`); } else { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); }
+        } else log(`${D.n} holds firm (rolled ${t}).`);
       }
       Tray.close();
     }
     if (isAI(s)) {
       await this.aiTurn(s, my);
     } else {
-      if (!resumed || G.phase === 'command') G.phase = 'move';
+      if (!resumed || G.phase === 'command') setPhase('move');
       const order = ['move', 'shoot', 'charge'];
       for (let k = order.indexOf(G.phase); k < 3 && !G.over; k++) {
-        G.phase = order[k]; this.ui = {}; this.banner(`${pname(s)}`, { move: 'Movement phase', shoot: 'Shooting phase', charge: 'Charge phase' }[G.phase]);
+        if (G.phase !== order[k]) setPhase(order[k]); this.ui = {}; this.banner(`${pname(s)}`, { move: 'Movement phase', shoot: 'Shooting phase', charge: 'Charge phase' }[G.phase]);
         Shell.save(); this.render();
         await new Promise(r => this.endPhase = r); this.alive(my);
       }
@@ -940,7 +1059,7 @@ const Battle = {
   },
   async aiTurn(s, my) {
     const pause = async ms => { this.render(); await sleep(Settings.fast ? ms * .4 : ms); this.alive(my); };
-    G.phase = 'move'; this.banner(pname(s), 'Movement phase'); await pause(500);
+    setPhase('move'); this.banner(pname(s), 'Movement phase'); await pause(500);
     for (const u of unitsOf(s)) {
       if (engaged(u)) { if (!AI.isMelee(u) && expected(engagedWith(u)[0], u, true) > expected(u, engagedWith(u)[0], true)) { const b = AI.bestMove(u, 0); if (b) { moveUnit(u, b.c, b.r); u.fellBack = true; u.moved = true; log(`${UD(u).n} falls back.`); await pause(500); } } continue; }
       let adv = 0;
@@ -949,24 +1068,24 @@ const Battle = {
       if (b && (b.c !== u.models[0].x || b.r !== u.models[0].y)) { moveUnit(u, b.c, b.r); u.moved = true; if (adv) log(`${UD(u).n} advances ${adv}".`); this.ui.flash = u.uid; await pause(450); }
     }
     this.ui.flash = null;
-    G.phase = 'shoot'; this.banner(pname(s), 'Shooting phase'); await pause(500);
-    for (const u of unitsOf(s)) { if (!canShoot(u)) continue; const v = AI.pickShot(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; this.render(); Sfx.play('shot'); await resolveAttack(u, v, false); u.shot = true; this.alive(my); Tray.close(); await pause(300); if (G.over) return; }
-    G.phase = 'charge'; this.ui = {}; this.banner(pname(s), 'Charge phase'); await pause(500);
-    for (const u of unitsOf(s)) { if (!canCharge(u)) continue; const v = AI.pickCharge(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; await this.doCharge(u, v, my); await pause(400); }
+    setPhase('shoot'); this.banner(pname(s), 'Shooting phase'); await pause(500);
+    for (const u of unitsOf(s)) { if (!canShoot(u)) continue; const v = AI.pickShot(u); if (!v) continue; this.ui = { sel: u.uid, aim: v.uid }; this.render(); AI.shootGambits(u, v); Sfx.play('shot'); await resolveAttack(u, v, false); u.shot = true; this.alive(my); Tray.close(); await pause(300); if (G.over) return; }
+    setPhase('charge'); this.ui = {}; this.banner(pname(s), 'Charge phase'); await pause(500);
+    for (const u of unitsOf(s)) { AI.rapidGambit(u); if (!canCharge(u)) continue; const v = AI.pickCharge(u); if (!v) continue; AI.surgeGambit(u, v); this.ui = { sel: u.uid, aim: v.uid }; await this.doCharge(u, v, my); await pause(400); }
     this.ui = {};
   },
   async doCharge(u, v, my) {
     const need = chargeNeed(u, v), bonus = chargeBonus(u);
     const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +' + bonus : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') });
     this.alive(my); Tray.close();
-    u.charged = true;
+    u.charged = true; u.surge = false;
     const roll = d[0] + d[1] + bonus;
     if (roll >= need && chargeMove(u, v, roll)) { u.chargedNow = true; u.moved = true; log(`${UD(u).n} charges into ${UD(v).n} (rolled ${roll}).`); Sfx.play('charge'); toast(`${UD(u).n} charges home!`); }
     else { log(`${UD(u).n} fails the charge (rolled ${roll}, needed ${need}).`); toast('Charge failed'); }
     this.render();
   },
   async fightPhase(s, my) {
-    G.phase = 'fight'; this.ui = {};
+    setPhase('fight'); this.ui = {};
     const queue = () => liveUnits().filter(u => !u.fought && engaged(u));
     if (!queue().length) return;
     this.banner(pname(s), 'Fight phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
@@ -991,7 +1110,8 @@ const Battle = {
     const o = G.over, w = o.winner, human = G.players.findIndex(p => p.type === 'human');
     const title = w === -1 ? 'A bloody stalemate' : G.players.every(p => p.type === 'human') ? `${pname(w)} is victorious!` : w === human ? 'Victory!' : 'Defeat';
     Sfx.play(w === human || (w >= 0 && G.players[w].type === 'human') ? 'win' : 'lose');
-    Shell.endScreen(title, `${o.why === 'wipe' ? 'An army was wiped out.' : 'Five battle rounds are over.'}<br>${pname(0)} ${G.vp[0]} VP · ${pname(1)} ${G.vp[1]} VP`);
+    const sv = s => G.sec ? ` <small>(${G.vp[s] - G.sec.vp[s]} objectives, ${G.sec.vp[s]} missions)</small>` : '';
+    Shell.endScreen(title, `${o.why === 'wipe' ? 'An army was wiped out.' : 'Five battle rounds are over.'}<br>${pname(0)} ${G.vp[0]} VP${sv(0)}<br>${pname(1)} ${G.vp[1]} VP${sv(1)}`);
   },
   /* ---------- player input ---------- */
   mySide() { return isAI(G.turn) ? null : G.turn; },
@@ -1021,6 +1141,14 @@ const Battle = {
     else if (a === 'shoot') { this.ui = { sel: u.uid, mode: 'shoot', targets: new Set(shootTargets(u).map(v => v.uid)) }; }
     else if (a === 'charge') { this.ui = { sel: u.uid, mode: 'charge', targets: new Set(chargeTargets(u).map(v => v.uid)) }; }
     else if (a === 'cancel') { this.ui = { sel: u.uid }; }
+    else if (a.startsWith('g_')) {
+      const id = a.slice(2); if (!canGamb(u.side, id)) return;
+      useGamb(u.side, id);
+      if (id === 'focus') { u.focus = true; toast(`${UD(u).n}: +1 to hit this phase`); }
+      else if (id === 'oath') { u.oath = false; toast(`${UD(u).n} renews its Oath of Iron`); }
+      else if (id === 'rapid') { u.rapid = true; toast(`${UD(u).n} can charge this turn`); }
+      else if (id === 'surge') { u.surge = true; toast(`${UD(u).n}: +2 to its charge roll`); }
+    }
     this.render();
   },
   async fire(v) {
@@ -1040,6 +1168,7 @@ const Battle = {
     const col = s => ARMIES[G.players[s].army].col, dark = s => ARMIES[G.players[s].army].dark;
     let tiles = '';
     for (const [k, t] of Object.entries(TERRAIN)) { const [c, r] = k.split(',').map(Number); tiles += `<div class="terr t-${t}" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px"></div>`; }
+    if (G.round === 1 && G.phase !== 'fight') for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) for (const sd of [0, 1]) if (inZone(sd, c, r, G.cfg.pts)) tiles += `<div class="zone" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px;background:${col(sd)}"></div>`;
     if (ui.reach) for (const k of ui.reach) { const [c, r] = k.split(',').map(Number); tiles += `<div class="reach" style="left:${c * cell}px;top:${r * cell}px;width:${cell}px;height:${cell}px"></div>`; }
     const objs = OBJECTIVES.map(([c, r], i) => `<div class="obj" style="left:${(c - 1.1) * cell}px;top:${(r - 1.1) * cell}px;width:${cell * 3.2}px;height:${cell * 3.2}px;border-color:${ctl[i] >= 0 ? col(ctl[i]) : 'rgba(255,255,255,.35)'};background:${ctl[i] >= 0 ? col(ctl[i]) + '22' : 'transparent'}"><span style="background:${ctl[i] >= 0 ? col(ctl[i]) : '#777'}">${i + 1}</span></div>`).join('');
     const models = liveUnits().map(u => {
@@ -1050,7 +1179,7 @@ const Battle = {
     root.innerHTML = `
       <div class="hud">
         <div class="side s0" style="--c:${col(0)}"><b>${pname(0)}</b><span>${G.vp[0]} VP · ${G.cp[0]} CP</span></div>
-        <div class="rnd"><b>Round ${G.round}/5</b><span>${{ command: 'Command', move: 'Movement', shoot: 'Shooting', charge: 'Charge', fight: 'Fight' }[G.phase] || ''}</span></div>
+        <div class="rnd" onclick="Shell.missions()"><b>Round ${G.round}/5 <i class="mi">📜</i></b><span>${{ command: 'Command', move: 'Movement', shoot: 'Shooting', charge: 'Charge', fight: 'Fight' }[G.phase] || ''}</span></div>
         <div class="side s1" style="--c:${col(1)}"><b>${pname(1)}</b><span>${G.vp[1]} VP · ${G.cp[1]} CP</span></div>
       </div>
       <div class="board-wrap"><div id="board" class="board" style="width:${cell * COLS}px;height:${cell * ROWS}px;background-size:${cell}px ${cell}px">${tiles}${objs}${models}<div id="bf-banner" class="banner">${this.bannerText ? `<b>${this.bannerText[0]}</b><span>${this.bannerText[1]}</span>` : ''}</div></div></div>
@@ -1083,8 +1212,8 @@ const Battle = {
         if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
         else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
-      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🎯 Shoot', 'gold'); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
-      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold'); else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
+      } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
+      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold') + (!u.surge && canGamb(s, 'surge') ? B('g_surge', '⚙ Scrap Surge · 1 CP', 'gmb') : ''); else if (u.advanced && !u.rapid && !u.charged && !engaged(u) && !u.fellBack && chargeTargets(u).length && canGamb(s, 'rapid')) { act = B('g_rapid', '⇶ Rapid Assault · 1 CP', 'gmb'); hint = 'This unit advanced. Rapid Assault lets it charge anyway.'; } else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;
     const next = { move: 'End movement →', shoot: 'End shooting →', charge: 'End charges → Fight' }[G.phase];
     return `${hint ? `<div class="msg">${hint}</div>` : ''}<div class="acts">${act}${B('end', next, 'end')}</div>${this.unitCard(vu)}`;
@@ -1096,11 +1225,12 @@ function toast(t) { let el = document.getElementById('toast'); if (!el) { el = d
    IRON DOMINION: settings, sound, menus, saves (the Kralnu Standard shell)
    ============================================================================ */
 const Store = { get(k, d) { try { const v = localStorage.getItem('idom_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem('idom_' + k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem('idom_' + k); } catch (e) {} } };
-const Settings = Object.assign({ music: 35, sfx: 70, quick: false, fast: false, diff: 'normal' }, Store.get('settings', {}));
+const Settings = Object.assign({ music: 35, sfx: 70, quick: false, fast: false, diff: 'normal', map: 'random' }, Store.get('settings', {}));
 const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.3.0', '20 Nov 2026', 'Tactics', ['Gambits: spend command points on Focused Fire, Rapid Assault, Go to Ground, Hold Fast, plus one special order per army', 'Secondary missions: hold two mission cards and score them for bonus VP; swap one for 1 CP', 'Three battlefields: the Ruined Hab-Block, the Crossroads and the Pincer (deploy from opposite corners)', 'Deployment zones are shaded in round 1, and the end screen splits objective and mission VP']],
   ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
   ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
 ];
@@ -1142,7 +1272,7 @@ const Shell = {
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
       <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 2: Muster</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 3a: Tactics</div></div>`);
   },
   async play(fromList) {
     const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
@@ -1157,7 +1287,7 @@ const Shell = {
     const l2 = mode === 'ai' ? randomList(other, pts) : await this.pickList(other, pts, 'Player 2');
     if (!l2) return;
     const players = mode === 'ai' ? [{ name: 'You', army, type: 'human', list: l1 }, { name: 'The AI', army: other, type: 'ai', list: l2 }] : [{ name: 'Player 1', army, type: 'human', list: l1 }, { name: 'Player 2', army: other, type: 'human', list: l2 }];
-    this.startBattle({ players, diff: Settings.diff, pts });
+    this.startBattle({ players, diff: Settings.diff, pts, map: Settings.map });
   },
   async pickList(army, pts, who) {
     const mine = Muster.all().filter(L => L.army === army && L.pts === pts && !listProblems(L).length), opts = [];
@@ -1181,6 +1311,19 @@ const Shell = {
     const v = await choose('Paused', '', [{ l: '▶ Resume', v: 'r', p: 1 }, { l: '⚙ Settings', v: 's' }, { l: '? How to play', v: 'h' }, { l: '🏠 Main menu', v: 'm' }]);
     if (v === 's') this.settings(true); else if (v === 'h') this.howto(); else if (v === 'm') { this.save(); this.menu(); }
   },
+  missions() {
+    if (!G || !G.sec) return toast('Missions are drawn at the start of each turn.');
+    const me = !isAI(G.turn) ? G.turn : G.players.findIndex(p => p.type === 'human'), s = me < 0 ? 0 : me, o = enemyOf(s), S = G.sec;
+    const canSwap = s === G.turn && !isAI(s) && !S.swapped[s] && G.cp[s] >= 1 && ['move', 'shoot', 'charge'].includes(G.phase);
+    const card = (id, i, mine) => `<div class="mcard"><div><span class="vp">${MISSIONS[id].vp} VP</span><b>${MISSIONS[id].n}</b></div><div class="small">${MISSIONS[id].txt}</div>${mine && canSwap ? `<button class="b" style="align-self:flex-end" onclick="Shell.swap(${i})">↻ New orders · 1 CP</button>` : ''}</div>`;
+    const gl = Object.values(GAMBITS).filter(g => !g.army || g.army === G.players[s].army).map(g => `<div class="gref"><b>${g.ic} ${g.n} · ${g.cp} CP</b> <span class="small">${g.when}.</span> ${g.txt}</div>`).join('');
+    sheet(`<h2>📜 ${pname(s) === 'You' ? 'Your' : pname(s) + "'s"} missions</h2>
+      <p class="small">Score them at the end of your turn for bonus VP. ${S.vp[s]} VP from missions so far. ${S.swapped[s] ? 'You have already changed orders this turn.' : 'Once per turn you can swap one for 1 CP.'}</p>
+      ${S.hand[s].map((id, i) => card(id, i, true)).join('') || '<p class="small">New missions are drawn at the start of your turn.</p>'}
+      <h3>${pname(o)}'s missions</h3>${S.hand[o].map(id => card(id, 0, false)).join('') || '<p class="small">None held right now.</p>'}
+      <h3>Gambits <small>(you have ${G.cp[s]} CP)</small></h3>${gl}<p class="small">Each Gambit can be used once per phase. Buttons appear on a unit's panel when one can be played, and you'll be asked when one can be used during the enemy's turn.</p>`);
+  },
+  swap(i) { const s = G.turn; if (isAI(s) || G.sec.swapped[s] || G.cp[s] < 1) return; swapMission(s, i); Sfx.play('tap'); this.missions(); },
   async endScreen(title, msg) {
     const v = await choose(title, msg, [{ l: '⚔ Battle again', v: 'a', p: 1 }, { l: '🏠 Main menu', v: 'm' }, { l: 'Look at the field', v: 's' }]);
     if (v === 'a') this.startBattle(G.cfg); else if (v === 'm') this.menu();
@@ -1192,7 +1335,8 @@ const Shell = {
       ${toggle('quick', 'Dice', 'Quick (rolled for you)', 'Hands-on (roll them yourself)')}
       ${toggle('fast', 'Game speed', 'Fast', 'Normal')}
       <label class="set"><span>AI general</span><select onchange="Settings.diff=this.value;saveSettings()">${['easy', 'normal', 'hard'].map(d => `<option value="${d}" ${Settings.diff === d ? 'selected' : ''}>${d[0].toUpperCase() + d.slice(1)}</option>`).join('')}</select></label>
-      <p class="small">The AI setting applies from the next battle.</p>
+      <label class="set"><span>Battlefield</span><select onchange="Settings.map=this.value;saveSettings()"><option value="random">Random</option>${Object.entries(MAPS).map(([k, m]) => `<option value="${k}" ${Settings.map === k ? 'selected' : ''}>${m.n}</option>`).join('')}</select></label>
+      <p class="small">The AI and battlefield settings apply from the next battle.</p>
       <button class="b danger" onclick="Shell.reset()">Reset save data</button>`);
   },
   async reset() { const v = await choose('Reset save data?', 'This deletes your battle in progress and your settings.', [{ l: 'Delete', v: 1 }, { l: 'Keep', v: 0, p: 1 }]); if (v) { Store.del('save'); Store.del('settings'); location.reload(); } },
@@ -1216,6 +1360,9 @@ const Shell = {
       <li><b>Fight:</b> every unit in combat fights, chargers first.</li></ol>
       <p><b>The dice:</b> roll to hit (the weapon's skill or better), sweep away the misses, roll to wound (Strength against Toughness), then the defender rolls saves (worsened by AP). Each unsaved wound deals the weapon's Damage. Re-rolls show up as buttons: tap them, or spend 1 CP on a command re-roll and tap the die you want again.</p>
       <p><b>Objectives:</b> a marker belongs to the side with the most Objective Control (OC) within 3". From round 2, at the end of your turn you score 5 VP for holding one, 5 more for holding two or more, and 5 more for holding more than the enemy.</p>
+      <p><b>Battlefields:</b> three maps with their own terrain, objectives and deployment zones (shaded in round 1). Pick one in Settings or leave it on Random.</p>
+      <p><b>Gambits:</b> spend command points on special orders such as Focused Fire (+1 to hit), Rapid Assault (charge after advancing), Go to Ground (+1 save when shot) and Hold Fast (pass a battle-shock test). Each one works once per phase. Tap the round box at the top to see them all.</p>
+      <p><b>Secondary missions:</b> you hold two mission cards, such as Assassinate or Behind Enemy Lines. Complete one by the end of your turn for 3 to 5 bonus VP, then draw a new one. Tap the 📜 round box to see your cards, and swap one for 1 CP if it's out of reach.</p>
       <p><b>Muster:</b> build your own armies from the main menu. Spend points on units, pick squad sizes and swap wargear for free. Every list needs a Leader.</p>
       <p><b>Leaders</b> can join a squad (gold-ringed on the field). The squad keeps its own stats, the leader takes wounds last, and the squad gets the leader's bonus. If the squad dies, the leader fights on alone.</p>
       <p><b>Sub-factions:</b> each army picks one, and its rule covers the whole army. Tap any unit to see your army's rule on its card.</p>
@@ -1315,7 +1462,7 @@ html:not(.kg-can-install) [data-install]{display:none!important}
 // Kralnu Games update check. When you push an update, change the game's version
 // AND version.json to the same new value; players then get a "new version" notice.
 (function(){
-  var NAME="Iron Dominion",BUILD="0.2.0",CACHES=["idom-"],CHECK=true;
+  var NAME="Iron Dominion",BUILD="0.3.0",CACHES=["idom-"],CHECK=true;
   var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
   if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
   function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}

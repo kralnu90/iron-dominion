@@ -38,6 +38,8 @@ function makeUnit(e, side, leaders = []) {
 }
 function newBattle(cfg) {
   NEXT_ID = 1; cfg.pts = cfg.pts || 500;
+  if (!MAPS[cfg.map]) cfg.map = Object.keys(MAPS)[Math.floor(Math.random() * Object.keys(MAPS).length)];
+  setMap(cfg.map);
   G = { cfg, round: 1, turn: 0, phase: 'command', cp: [0, 0], vp: [0, 0], players: cfg.players, units: [], log: [], over: null, first: 0, cmdUsed: [false, false], score: [[], []] };
   cfg.players.forEach((p, s) => {
     const L = p.list = p.list || starterList(p.army);
@@ -45,6 +47,7 @@ function newBattle(cfg) {
     L.units.forEach(e => { if (!leaders.includes(e)) G.units.push(makeUnit(e, s, leaders.filter(l => l.at === e.k))); });
   });
   cfg.players.forEach((p, s) => { const x = subOf(s); log(`${p.name}: ${p.list.name}, ${x ? x.n : ARMIES[p.army].short} (${listPts(p.list)} pts).`); });
+  log(`The battlefield: ${MAPS[cfg.map].n}.`);
   deploy(0); deploy(1);
   G.first = G.turn = Math.random() < .5 ? 0 : 1;
   log(`${pverb(G.first, 'wins', 'win')} the roll-off and takes the first turn.`);
@@ -54,6 +57,7 @@ function newBattle(cfg) {
 function migrate(state) {
   for (const u of state.units) { for (const m of u.models) if (!m.p) m.p = u.def; if (u.pts == null) { u.pts = UNITS[u.def].pts; u.wStart = u.startN * UNITS[u.def].W; } }
   if (!state.cfg.pts) state.cfg.pts = 500;
+  setMap(state.cfg.map || 'hab');
   return state;
 }
 const pname = s => G.players[s].name;
@@ -83,21 +87,68 @@ function formation(u, anchor, ok) {
   return true;
 }
 function deploy(side) {
-  const depth = (POINTS.find(p => p.pts === G.cfg.pts) || POINTS[0]).depth;
-  const zone = d => (x, y) => side === 1 ? y <= d - 1 : y >= ROWS - d;
+  const pts = G.cfg.pts, corners = MAPS[MAP_ID].zone === 'corners';
   const us = G.units.filter(u => u.side === side);
-  const slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2], [3, 3], [11, 3]];
-  const all = []; for (let r = 0; r < depth + 1; r++) for (let c = 0; c < COLS; c++) all.push([c, r]);
-  all.sort((a, b) => Math.abs(a[0] - 7) - Math.abs(b[0] - 7) + (b[1] - a[1]) * .3);
+  const slots = corners ? [] : [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2], [3, 3], [11, 3]];
+  const all = []; for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) all.push([c, r]);
+  if (corners) all.sort((a, b) => Math.hypot(a[0] - 3, a[1] - 3.5) - Math.hypot(b[0] - 3, b[1] - 3.5));
+  else all.sort((a, b) => Math.abs(a[0] - 7) - Math.abs(b[0] - 7) + (b[1] - a[1]) * .3);
   us.forEach((u, i) => {
-    const cands = [slots[i % slots.length]].concat(all);
-    let ok = false;
-    for (const d of [depth, depth + 1, depth + 2]) {
-      for (let [c, r] of cands) { if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; } if (formation(u, { x: c, y: r }, zone(d))) { ok = true; break; } }
+    const cands = (slots.length ? [slots[i % slots.length]] : []).concat(all);
+    for (const extra of [0, 1, 2]) {
+      let ok = false;
+      for (let [c, r] of cands) { if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; } if (!inZone(side, c, r, pts, extra)) continue; if (formation(u, { x: c, y: r }, (x, y) => inZone(side, x, y, pts, extra))) { ok = true; break; } }
       if (ok) break;
     }
   });
 }
+/* ---------- phases and Gambits ---------- */
+function setPhase(p) { G.phase = p; G.gamb = [{}, {}]; for (const u of G.units) u.focus = false; }
+const canGamb = (s, id) => { const g = GAMBITS[id]; return G.cp[s] >= g.cp && !(G.gamb && G.gamb[s][id]) && (!g.army || G.players[s].army === g.army); };
+function useGamb(s, id) { G.gstat = G.gstat || {}; G.gstat[id] = (G.gstat[id] || 0) + 1; G.cp[s] -= GAMBITS[id].cp; G.gamb = G.gamb || [{}, {}]; G.gamb[s][id] = true; log(`${pverb(s, 'uses', 'use')} ${GAMBITS[id].n}.`); Sfx.play('tap'); }
+/* ---------- secondary missions ---------- */
+function missionDeck() { const d = Object.keys(MISSIONS); for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; } return d; }
+function missionPossible(s, id) {
+  const e = unitsOf(enemyOf(s));
+  if (id === 'bringdown') return e.some(u => UD(u).vehicle);
+  if (id === 'assassinate') return e.some(u => u.models.some(m => UNITS[m.p].role === 'Leader'));
+  return true;
+}
+function drawMissions(s) {
+  const S = G.sec = G.sec || { hand: [[], []], deck: [missionDeck(), missionDeck()], vp: [0, 0], done: [[], []], swapped: [false, false] };
+  S.swapped[s] = false; S.hand[s] = S.hand[s].filter(id => missionPossible(s, id));
+  for (let g = 0; S.hand[s].length < 2 && g < 60; g++) {
+    if (!S.deck[s].length) S.deck[s] = missionDeck();
+    const id = S.deck[s].shift(); if (!S.hand[s].includes(id) && missionPossible(s, id)) S.hand[s].push(id);
+  }
+}
+function swapMission(s, i) {
+  const S = G.sec, old = S.hand[s][i]; G.cp[s]--; S.swapped[s] = true; S.hand[s].splice(i, 1);
+  for (let g = 0; S.hand[s].length < 2 && g < 60; g++) { if (!S.deck[s].length) S.deck[s] = missionDeck(); const id = S.deck[s].shift(); if (id !== old && !S.hand[s].includes(id) && missionPossible(s, id)) S.hand[s].push(id); }
+  log(`${pverb(s, 'swaps', 'swap')} ${MISSIONS[old].n} for new orders.`);
+}
+function quarters(s) { const q = new Set(); for (const u of unitsOf(s)) for (const m of u.models) { if (m.x === 7 || m.y === 10) continue; q.add((m.x > 7 ? 1 : 0) + (m.y > 10 ? 2 : 0)); } return q.size; }
+function missionMet(s, id) {
+  const K = (G.kills || []).filter(k => k.side !== s), e = enemyOf(s), pts = G.cfg.pts;
+  switch (id) {
+    case 'assassinate': return K.some(k => k.leader) ? 5 : 0;
+    case 'bringdown': return K.some(k => k.vehicle) ? 5 : 0;
+    case 'noprisoners': return K.filter(k => k.unit).length >= 2 ? 4 : 0;
+    case 'overwhelm': return K.some(k => k.unit && k.onObj) ? 4 : 0;
+    case 'behind': return unitsOf(s).some(u => !u.shaken && u.models.some(m => inZone(e, m.x, m.y, pts))) ? 4 : 0;
+    case 'fronts': { const n = quarters(s); return n >= 4 ? 4 : n >= 3 ? 3 : 0; }
+    case 'nomans': { const ctl = objControl(); return OBJECTIVES.filter(([c, r], i) => ctl[i] === s && !inZone(0, c, r, pts) && !inZone(1, c, r, pts)).length >= 2 ? 4 : 0; }
+    case 'denial': { const [c, r] = OBJECTIVES[0], near = (side, d) => unitsOf(side).some(u => u.models.some(m => Math.hypot(m.x - c, m.y - r) * SQ <= d)); return near(s, 3.2) && !near(e, 6) ? 4 : 0; }
+  }
+  return 0;
+}
+function scoreMissions(s) {
+  const S = G.sec; if (!S) return [];
+  const out = [];
+  for (const id of S.hand[s].slice()) { const vp = missionMet(s, id); if (vp) { G.vp[s] += vp; S.vp[s] += vp; S.done[s].push(id); S.hand[s].splice(S.hand[s].indexOf(id), 1); out.push([id, vp]); } }
+  return out;
+}
+const onObjective = u => OBJECTIVES.some(([c, r]) => u.models.some(m => Math.hypot(m.x - c, m.y - r) <= 1.6));
 function engagedWith(u) { const out = new Set(); for (const v of liveUnits()) if (v.side !== u.side) for (const a of u.models) for (const b of v.models) if (cheb(a, b) <= 1) out.add(v); return [...out]; }
 const engaged = u => engagedWith(u).length > 0;
 function unitDistIn(u, v) { let d = 1e9; for (const a of u.models) for (const b of v.models) d = Math.min(d, sqd(a, b)); return d * SQ; }
@@ -148,7 +199,7 @@ function atkMods(att, def, w, melee, g) {
   const wn = Math.max(2, woundNeed(S, UD(def).T) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
   const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0);
   const heavy = !melee && w.kw.heavy && stationary(att), haze = !melee && g && g.far && subIs(def.side, 'haze');
-  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0)) + (haze ? 1 : 0));
+  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0) - (!melee && att.focus ? 1 : 0)) + (haze ? 1 : 0));
   return { S, wn, AP, need, heavy, haze };
 }
 /* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
@@ -168,8 +219,8 @@ function meleeGroups(att) { const g = {}; for (const m of att.models) for (const
 function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
-function canCharge(u) { return u.models.length && !u.advanced && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
-function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b); }
+function canCharge(u) { return u.models.length && (!u.advanced || u.rapid) && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
+function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b) + (u.surge ? 2 : 0); }
 const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
 function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rerollOnes') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 /* expected damage (for the AI and the hint line) */
@@ -190,7 +241,14 @@ function expected(att, def, melee) {
 
 /* ---------- resolving an attack (dice go through the Tray) ---------- */
 async function resolveAttack(att, def, melee) {
-  const groups = melee ? meleeGroups(att) : shootingGroups(att, def), cover = !melee && inCover(def, att);
+  const groups = melee ? meleeGroups(att) : shootingGroups(att, def), onObj = onObjective(def);
+  let cover = !melee && inCover(def, att);
+  if (!melee && !cover && canGamb(def.side, 'ground') && groups.length) {
+    let use = false;
+    if (isAI(def.side)) use = expected(att, def, false) >= Math.max(2, def.models.reduce((a, m) => a + m.w, 0) * .3) && (G.cp[def.side] >= 2 || !!def.lead || UD(def).role === 'Leader' || UD(def).vehicle);
+    else if (!Tray.headless) { Tray.close(); use = await choose(`${UD(def).n} under fire!`, `${UD(att).n} is shooting at them. Spend 1 CP on <b>Go to Ground</b>? They count as in cover (+1 save) against this attack. You have ${G.cp[def.side]} CP.`, [{ l: '⛉ Go to Ground (1 CP)', v: true, p: 1 }, { l: 'No', v: false }]); }
+    if (use) { useGamb(def.side, 'ground'); cover = true; if (!Tray.headless) toast(`${UD(def).n} goes to ground`); }
+  }
   let killed = 0;
   for (const g of groups) {
     if (!def.models.length) break;
@@ -238,7 +296,7 @@ async function resolveAttack(att, def, melee) {
     const msg = `${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, ${fails} unsaved, ${before - def.models.length} model${before - def.models.length === 1 ? '' : 's'} slain.`;
     log(msg); await Tray.result(msg, def);
   }
-  if (!def.models.length) { log(`${UD(def).n} is wiped out!`); Sfx.play('lose'); }
+  if (!def.models.length) { log(`${UD(def).n} is wiped out!`); Sfx.play('lose'); (G.kills = G.kills || []).push({ side: def.side, unit: 1, vehicle: !!UD(def).vehicle, onObj }); }
   checkWipe();
   return killed;
 }
@@ -246,7 +304,7 @@ function allocate(def, dmg) {
   // wounded models take damage first, then plain models, specialists, and an attached leader last
   const ms = def.models, body = ms.filter(x => !x.ldr);
   const m = body.find(x => x.w < MW(x)) || body.filter(x => !x.spec).slice(-1)[0] || body.slice(-1)[0] || ms.find(x => x.w < MW(x)) || ms[ms.length - 1];
-  m.w -= dmg; if (m.w <= 0) ms.splice(ms.indexOf(m), 1);
+  m.w -= dmg; if (m.w <= 0) { ms.splice(ms.indexOf(m), 1); if (UNITS[m.p].role === 'Leader') (G.kills = G.kills || []).push({ side: def.side, leader: 1 }); }
   if (ms.length && !ms.some(x => !x.ldr)) { // the bodyguard is gone: the leader fights on alone
     log(`${UD(def).n} falls. ${UNITS[def.lead].n} fights on alone.`);
     def.def = def.lead; def.lead = null; def.startN = ms.length; ms.forEach(x => { x.ldr = false; x.spec = false; });
@@ -336,5 +394,15 @@ const AI = {
     }
     return best && best.s > .8 ? best.v : null;
   },
+  shootGambits(u, v) {
+    const s = u.side, e = expected(u, v, false);
+    if (e >= 3 && canGamb(s, 'focus')) { useGamb(s, 'focus'); u.focus = true; }
+    if (u.oath && e >= 3 && G.cp[s] >= 2 && canGamb(s, 'oath')) { useGamb(s, 'oath'); u.oath = false; }
+  },
+  rapidGambit(u) {
+    if (!u.models.length || !u.advanced || u.charged || u.fellBack || engaged(u) || !AI.isMelee(u) || !canGamb(u.side, 'rapid') || !chargeTargets(u).length) return;
+    u.rapid = true; if (AI.pickCharge(u)) useGamb(u.side, 'rapid'); else u.rapid = false;
+  },
+  surgeGambit(u, v) { if (canGamb(u.side, 'surge') && chargeNeed(u, v) - chargeBonus(u) >= 8) { useGamb(u.side, 'surge'); u.surge = true; } },
   pickFight(u) { let best = null; for (const v of engagedWith(u)) { const s = expected(u, v, true); if (!best || s > best.s) best = { v, s }; } return best ? best.v : null; }
 };

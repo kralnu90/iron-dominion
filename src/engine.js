@@ -16,6 +16,7 @@ const liveUnits = () => G.units.filter(u => u.models.length);
 const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const sqd = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 let NEXT_ID = 1;
+const nd = n => n === 1 ? '1 die' : n + ' dice';
 
 /* ---------- building armies ---------- */
 function makeUnit(def, side) {
@@ -117,7 +118,7 @@ function shootingGroups(att, def) {
   return Object.values(groups);
 }
 function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true }; g[wid].models++; } return Object.values(g); }
-function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return liveUnits().some(v => v.side !== u.side && shootingGroups(u, v).length); }
+function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
 function canCharge(u) { return u.models.length && !u.advanced && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
@@ -155,20 +156,20 @@ async function resolveAttack(att, def, melee) {
     if (w.kw.torrent) { hits = A; await Tray.note(head, `${A} automatic hit${A === 1 ? '' : 's'} (torrent).`); }
     else {
       const need = Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0));
-      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${A} dice, ${need}+ to hit${w.kw.heavy && stationary(att) ? ' (heavy, stood still)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
+      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${w.kw.heavy && stationary(att) ? ' (heavy, stood still)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
       hits = dice.filter(v => v >= need).length;
     }
     if (!hits) { log(`${head}: no hits.`); continue; }
     // wound
     const wn = woundNeed(S, T);
-    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${hits} dice, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin });
+    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin });
     const wounds = wd.filter(v => v >= wn).length;
     if (!wounds) { log(`${head}: ${hits} hit${hits > 1 ? 's' : ''}, no wounds.`); continue; }
     // save (the defender rolls)
     const sv = saveNeed(def, w.AP, cover);
     let fails = wounds;
     if (sv <= 6) {
-      const sd = await Tray.step({ kind: 'save', title: `${UD(def).n} save`, label: `Roll saves: ${wounds} dice, ${sv}+ to save${cover ? ' (in cover)' : ''}${UD(def).ward && UD(def).ward === sv ? ' (ward)' : ''}`, n: wounds, need: sv, side: def.side });
+      const sd = await Tray.step({ kind: 'save', title: `${UD(def).n} save`, label: `Roll saves: ${nd(wounds)}, ${sv}+ to save${cover ? ' (in cover)' : ''}${UD(def).ward && UD(def).ward === sv ? ' (ward)' : ''}`, n: wounds, need: sv, side: def.side });
       fails = sd.filter(v => v < sv).length;
     } else await Tray.note(`${UD(def).n} save`, `No save possible against AP${w.AP}.`);
     if (!fails) { log(`${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, all saved.`); continue; }

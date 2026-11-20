@@ -3,7 +3,7 @@
    IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
    Distances are in inches; the board is a grid of 2" squares.
    ============================================================================ */
-const GAME_VERSION = '0.3.1';
+const GAME_VERSION = '0.3.2';
 const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
 
 /* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
@@ -62,7 +62,23 @@ const WEAPONS = {
   suitFists:   { n: 'Suit fists', r: 0, A: 2, sk: 5, S: 6, AP: 0, D: 1, kw: {} },
   railLance:   { n: 'Rail lance', r: 48, A: 2, sk: 4, S: 12, AP: -4, D: 'D6+1', kw: { heavy: 1 } },
   twinIon:     { n: 'Twin ion cannons', r: 30, A: 4, sk: 4, S: 7, AP: -1, D: 2, kw: { twin: 1 } },
-  striderStomp: { n: 'Strider stomp', r: 0, A: 3, sk: 5, S: 7, AP: 0, D: 1, kw: {} }
+  striderStomp: { n: 'Strider stomp', r: 0, A: 3, sk: 5, S: 7, AP: 0, D: 1, kw: {} },
+  /* the Chitin Brood */
+  monScythes:  { n: 'Monstrous scythes', r: 0, A: 6, sk: 2, S: 8, AP: -2, D: 2, kw: {} },
+  spineVolley: { n: 'Spine volley', r: 18, A: 4, sk: 3, S: 5, AP: -1, D: 1, kw: {} },
+  boneStaff:   { n: 'Bone staff', r: 0, A: 3, sk: 3, S: 6, AP: -1, D: 2, kw: {} },
+  acidSpit:    { n: 'Acid spit', r: 12, A: 2, sk: 3, S: 4, AP: -1, D: 1, kw: { pistol: 1 } },
+  skitterClaws: { n: 'Skitter claws', r: 0, A: 3, sk: 4, S: 4, AP: 0, D: 1, kw: {} },
+  spineDarts:  { n: 'Spine darts', r: 12, A: 1, sk: 4, S: 3, AP: 0, D: 1, kw: { assault: 1 } },
+  razorScythes: { n: 'Razor scythes', r: 0, A: 5, sk: 3, S: 5, AP: -2, D: 1, kw: {} },
+  boneSabres:  { n: 'Bone sabres', r: 0, A: 3, sk: 3, S: 6, AP: -1, D: 2, kw: {} },
+  barbedTalons: { n: 'Barbed talons', r: 0, A: 3, sk: 4, S: 4, AP: -1, D: 1, kw: {} },
+  quillShot:   { n: 'Quill shot', r: 12, A: 2, sk: 4, S: 4, AP: 0, D: 1, kw: { assault: 1 } },
+  grindingMaw: { n: 'Grinding maw', r: 0, A: 5, sk: 3, S: 9, AP: -2, D: 3, kw: {} },
+  acidSpray:   { n: 'Acid spray', r: 12, A: 'D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1 } },
+  crushTalons: { n: 'Crushing talons', r: 0, A: 5, sk: 3, S: 12, AP: -3, D: 3, kw: {} },
+  reaperClaws: { n: 'Reaper claws', r: 0, A: 9, sk: 3, S: 8, AP: -2, D: 1, kw: {} },
+  sporeCannon: { n: 'Spore cannon', r: 24, A: 'D6', sk: 4, S: 7, AP: -1, D: 2, kw: {} }
 };
 
 /* Each unit lists its models: [count, guns, melee]. Plain models die first, specialists last.
@@ -129,7 +145,24 @@ const UNITS = {
     models: [[3, ['ionRepeater'], ['suitFists']]], sizes: [{ n: 3, pts: 110 }, { n: 6, pts: 220 }],
     opts: [{ id: 'gun', n: 'Suit weapons', g: 0, f: 'guns', ch: [['ionRepeater'], ['scorchEmitter'], ['lanceProjector']] }] },
   railStrider: { n: 'Railspire Strider', role: 'Walker', pts: 130, ic: '♞', M: 8, T: 9, Sv: 3, W: 10, Ld: 7, OC: 3, vehicle: 1,
-    models: [[1, ['railLance'], ['striderStomp']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['railLance'], ['twinIon']] }] }
+    models: [[1, ['railLance'], ['striderStomp']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['railLance'], ['twinIon']] }] },
+  /* ---------------- THE CHITIN BROOD ---------------- */
+  broodMatriarch: { n: 'Brood Matriarch', role: 'Leader', pts: 85, ic: '♕', M: 8, T: 7, Sv: 3, W: 8, Ld: 6, OC: 2, ward: 5, vehicle: 1,
+    models: [[1, ['spineVolley'], ['monScythes']]], rule: { id: 'linkAura', n: 'Brood Link', txt: 'Friendly units within 9" automatically pass battle-shock tests.' } },
+  spawnWarden: { n: 'Spawn-Warden', role: 'Leader', pts: 45, ic: '⚘', M: 6, T: 5, Sv: 4, W: 5, Ld: 7, OC: 1,
+    models: [[1, ['acidSpit'], ['boneStaff']]],
+    lead: { id: 'toughUp', n: 'Chitin Hardening', txt: 'The unit gets +1 Toughness.' }, leads: ['skitterlings', 'razorfiends'] },
+  skitterlings: { n: 'Skitterling Swarm', role: 'Core troops', pts: 55, ic: '⁂', M: 8, T: 3, Sv: 6, W: 1, Ld: 8, OC: 2,
+    models: [[10, ['spineDarts'], ['skitterClaws']]], sizes: [{ n: 10, pts: 55 }, { n: 20, pts: 100 }] },
+  razorfiends: { n: 'Razorfiend Pack', role: 'Assault', pts: 85, ic: '⚚', M: 8, T: 5, Sv: 4, W: 4, Ld: 8, OC: 1,
+    models: [[3, [], ['razorScythes']]], sizes: [{ n: 3, pts: 85 }, { n: 6, pts: 170 }], rule: { id: 'rerollCharge', n: 'Pounce', txt: 'May re-roll charge rolls.' },
+    opts: [{ id: 'mel', n: 'Claws', g: 0, f: 'melee', ch: [['razorScythes'], ['boneSabres']] }] },
+  vexwings: { n: 'Vexwings', role: 'Fast attack', pts: 60, ic: '⋎', M: 14, T: 3, Sv: 4, W: 2, Ld: 8, OC: 1,
+    models: [[4, ['quillShot'], ['barbedTalons']]], sizes: [{ n: 4, pts: 60 }, { n: 8, pts: 120 }] },
+  tunnelWyrm: { n: 'Tunnel Wyrm', role: 'Monster', pts: 105, ic: '§', M: 8, T: 9, Sv: 3, W: 10, Ld: 8, OC: 3, vehicle: 1,
+    models: [[1, ['acidSpray'], ['grindingMaw']]], rule: { id: 'burrow', n: 'Burrower', txt: 'Sets up after both armies, anywhere outside the deployment zones and more than 9" from the enemy.' } },
+  behemoth: { n: 'Chitin Behemoth', role: 'Monster', pts: 150, ic: '♅', M: 8, T: 10, Sv: 2, W: 12, Ld: 8, OC: 4, vehicle: 1,
+    models: [[1, ['sporeCannon'], ['crushTalons']]], opts: [{ id: 'mel', n: 'Claws', g: 0, f: 'melee', ch: [['crushTalons'], ['reaperClaws']] }] }
 };
 for (const [k, U] of Object.entries(UNITS)) { U.id = k; if (!U.sizes) U.sizes = [{ n: U.models.reduce((a, g) => a + g[0], 0), pts: U.pts }]; U.opts = U.opts || []; }
 
@@ -149,6 +182,11 @@ const SUBS = {
     fleet: { n: 'The Gilded Fleet', tag: 'Point-blank volleys', id: 'halfAP', rn: 'Close Accounting', txt: 'Ranged attacks at half range or closer get an extra -1 AP.' },
     veil: { n: 'The Veiled Syndicate', tag: 'Strike from the shadows', id: 'veil', rn: 'Shadow Trade', txt: 'Your units count as being in cover against attacks from more than 12" away.' },
     ledger: { n: 'The Iron Ledger', tag: 'Own the ground', id: 'ledger', rn: 'Hold the Accounts', txt: 'Every model in your army gets +1 OC.' }
+  },
+  brood: {
+    gorge: { n: 'The Gorging Host', tag: 'Feast on the fallen', id: 'frenzy', rn: 'Feeding Frenzy', txt: 'On a turn a unit charged, its melee attacks add 1 to hit rolls.' },
+    shell: { n: 'The Iron-Shell Brood', tag: 'Living fortresses', id: 'carapace', rn: 'Hardened Carapace', txt: 'Attacks against your Monsters lose 1 Damage (to a minimum of 1).' },
+    swarm: { n: 'The Endless Swarm', tag: 'Faster than fear', id: 'swift', rn: 'Skittering Speed', txt: 'Your units add 2" to their Move.' }
   }
 };
 const POINTS = [{ pts: 500, n: 'Skirmish', depth: 4, maxModels: 42 }, { pts: 750, n: 'Clash', depth: 5, maxModels: 55 }];
@@ -165,7 +203,11 @@ const ARMIES = {
   concord: { n: 'The Auric Concord', short: 'Concord', col: '#5fd0c0', dark: '#1d4f4a', blurb: 'Gilded merchant-lords with battlesuits, drones and long guns. Deadly at range, fragile up close.',
     roster: ['factorPrime', 'droneMarshal', 'lumenWardens', 'longshots', 'skimDrones', 'aegisSuits', 'railStrider'],
     rule: { n: 'Measured Fire', txt: 'Units that did not Advance add 1 to their ranged hit rolls, and can shoot after falling back.' },
-    list: ['factorPrime', 'lumenWardens:1', 'lumenWardens', 'longshots', 'skimDrones', 'railStrider', 'droneMarshal'], pairs: [[0, 1], [6, 2]], sub: 'fleet' }
+    list: ['factorPrime', 'lumenWardens:1', 'lumenWardens', 'longshots', 'skimDrones', 'railStrider', 'droneMarshal'], pairs: [[0, 1], [6, 2]], sub: 'fleet' },
+  brood: { n: 'The Chitin Brood', short: 'Brood', col: '#b77be0', dark: '#3e1f55', blurb: 'A ravenous alien swarm: fast, endless and all claws. Weak guns, terrifying up close.',
+    roster: ['broodMatriarch', 'spawnWarden', 'skitterlings', 'razorfiends', 'vexwings', 'tunnelWyrm', 'behemoth'],
+    rule: { n: 'Relentless Swarm', txt: 'Units can charge after advancing, and add 1 to charge rolls (up to +2 with other bonuses).' },
+    list: ['broodMatriarch', 'skitterlings', 'skitterlings', 'razorfiends', 'tunnelWyrm', 'spawnWarden', 'vexwings'], pairs: [[5, 1]], sub: 'gorge' }
 };
 
 /* Battlefields: each is rotationally symmetric so both sides get the same ground.
@@ -204,13 +246,14 @@ const GAMBITS = {
   hold: { n: 'Hold Fast', ic: '⚑', cp: 1, when: 'When one of your units fails a battle-shock test', txt: 'It passes instead.' },
   oath: { n: 'Renewed Oath', ic: '⚜', cp: 1, army: 'covenant', when: 'Your shooting phase, before a unit shoots', txt: 'A unit that has used its Oath of Iron can use it again.' },
   surge: { n: 'Scrap Surge', ic: '⚙', cp: 1, army: 'rust', when: 'Your charge phase, before a unit charges', txt: 'Add 2 to that charge roll.' },
+  adrenal: { n: 'Adrenal Surge', ic: '♨', cp: 1, army: 'brood', when: 'Your charge phase, before a unit charges', txt: 'That unit can re-roll its charge roll.' },
   overc: { n: 'Overcharge', ic: '⚡', cp: 1, army: 'concord', when: 'Your shooting phase, before a unit shoots', txt: 'That unit re-rolls failed wound rolls this phase.' }
 };
 
 /* Secondary missions: each player holds two at a time and scores them at the end of their own turn. */
 const MISSIONS = {
   assassinate: { n: 'Assassinate', vp: 5, txt: 'Slay an enemy Leader this turn.' },
-  bringdown: { n: 'Bring It Down', vp: 5, txt: 'Destroy an enemy Walker this turn.' },
+  bringdown: { n: 'Bring It Down', vp: 5, txt: 'Destroy an enemy Walker or Monster this turn.' },
   noprisoners: { n: 'No Prisoners', vp: 4, txt: 'Destroy two or more enemy units this turn.' },
   overwhelm: { n: 'Overwhelm', vp: 4, txt: 'Destroy an enemy unit that was holding an objective.' },
   behind: { n: 'Behind Enemy Lines', vp: 4, txt: 'End your turn with a unit in the enemy deployment zone.' },

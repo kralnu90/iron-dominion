@@ -18,12 +18,13 @@ const sqd = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 let NEXT_ID = 1;
 const nd = n => n === 1 ? '1 die' : n + ' dice';
 const MW = m => UNITS[m.p].W;
-const unitM = u => Math.min(...u.models.map(m => UNITS[m.p].M));
+const unitM = u => Math.min(...u.models.map(m => UNITS[m.p].M)) + (subIs(u.side, 'swift') ? 2 : 0);
 const unitLd = u => Math.min(...u.models.map(m => UNITS[m.p].Ld));
 const hasRule = (u, id) => u.models.some(m => UNITS[m.p].rule && UNITS[m.p].rule.id === id);
 const leadIs = (u, id) => !!(u.lead && UNITS[u.lead].lead && UNITS[u.lead].lead.id === id);
 const subOf = s => { const p = G.players[s], L = p.list; return L && SUBS[p.army] && SUBS[p.army][L.sub] || null; };
 const subIs = (s, id) => { const x = subOf(s); return !!(x && x.id === id); };
+const unitT = u => UD(u).T + (leadIs(u, 'toughUp') ? 1 : 0);
 const modelOC = (u, m) => UNITS[m.p].OC + (leadIs(u, 'ocBoost') ? 1 : 0) + (subIs(u.side, 'ledger') ? 1 : 0);
 const unitOC = u => u.models.reduce((a, m) => a + modelOC(u, m), 0);
 
@@ -48,9 +49,9 @@ function newBattle(cfg) {
   });
   cfg.players.forEach((p, s) => { const x = subOf(s); log(`${p.name}: ${p.list.name}, ${x ? x.n : ARMIES[p.army].short} (${listPts(p.list)} pts).`); });
   log(`The battlefield: ${MAPS[cfg.map].n}.`);
-  deploy(0); deploy(1);
+  deploy(0); deploy(1); burrow(0); burrow(1);
   G.first = G.turn = Math.random() < .5 ? 0 : 1;
-  log(`${pverb(G.first, 'wins', 'win')} the roll-off and takes the first turn.`);
+  log(`${pverb(G.first, 'wins', 'win')} the roll-off and ${pname(G.first) === 'You' ? 'take' : 'takes'} the first turn.`);
   return G;
 }
 /* saves from v0.1 had no per-model profiles */
@@ -101,6 +102,20 @@ function deploy(side) {
       if (ok) break;
     }
   });
+}
+/* burrowers pop up in no-man's land, more than 9" from the enemy */
+function burrow(side) {
+  const pts = G.cfg.pts;
+  for (const u of G.units.filter(u => u.side === side && hasRule(u, 'burrow'))) {
+    const foes = G.units.filter(v => v.side !== side).flatMap(v => v.models);
+    const ok = (x, y) => !inZone(0, x, y, pts) && !inZone(1, x, y, pts) && foes.every(m => Math.hypot(m.x - x, m.y - y) * SQ > 9);
+    const cells = []; for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) if (ok(c, r)) cells.push([c, r, Math.min(...foes.map(m => Math.hypot(m.x - c, m.y - r))) + Math.abs(c - 7) * .3]);
+    cells.sort((a, b) => a[2] - b[2]);
+    const save = u.models.map(m => [m.x, m.y]); let placed = false;
+    for (const [c, r] of cells.slice(0, 40)) if (formation(u, { x: c, y: r }, ok)) { placed = true; break; }
+    if (!placed) u.models.forEach((m, i) => { m.x = save[i][0]; m.y = save[i][1]; });
+    else log(`${UD(u).n} bursts up from below!`);
+  }
 }
 /* ---------- phases and Gambits ---------- */
 function setPhase(p) { G.phase = p; G.gamb = [{}, {}]; for (const u of G.units) { u.focus = false; u.overc = false; } }
@@ -197,10 +212,10 @@ function saveNeed(def, AP, cover) {
 function atkMods(att, def, w, melee, g) {
   const rust = melee && att.chargedNow && G.players[att.side].army === 'rust';
   const S = w.S + (rust ? 1 : 0) + (melee && leadIs(att, 'meleeStr') ? 1 : 0);
-  const wn = Math.max(2, woundNeed(S, UD(def).T) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
+  const wn = Math.max(2, woundNeed(S, unitT(def)) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
   const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0) - (!melee && leadIs(att, 'apRanged') ? 1 : 0) - (!melee && g && g.half && subIs(att.side, 'halfAP') ? 1 : 0);
   const heavy = !melee && w.kw.heavy && stationary(att), measured = !melee && !att.advanced && G.players[att.side].army === 'concord', haze = !melee && g && g.far && subIs(def.side, 'haze');
-  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0) - (!melee && att.focus ? 1 : 0) - (!melee && !att.advanced && G.players[att.side].army === 'concord' ? 1 : 0)) + (haze ? 1 : 0));
+  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0) - (!melee && att.focus ? 1 : 0) - (!melee && !att.advanced && G.players[att.side].army === 'concord' ? 1 : 0) - (melee && att.chargedNow && subIs(att.side, 'frenzy') ? 1 : 0)) + (haze ? 1 : 0));
   return { S, wn, AP, need, heavy, haze, measured };
 }
 /* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
@@ -220,8 +235,8 @@ function meleeGroups(att) { const g = {}; for (const m of att.models) for (const
 function canShoot(u) { if (!u.models.length || u.shot || (u.fellBack && G.players[u.side].army !== 'concord') || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
-function canCharge(u) { return u.models.length && (!u.advanced || u.rapid) && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
-function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b) + (u.surge ? 2 : 0); }
+function canCharge(u) { return u.models.length && (!u.advanced || u.rapid || G.players[u.side].army === 'brood') && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
+function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; if (G.players[u.side].army === 'brood') b++; return Math.min(2, b) + (u.surge ? 2 : 0); }
 const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
 function woundRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rrWoundAura') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rerollOnes') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
@@ -256,7 +271,7 @@ async function resolveAttack(att, def, melee) {
     if (!def.models.length) break;
     const w = WP(g.wid);
     let A = 0; for (let k = 0; k < g.models; k++) A += rollExpr(w.A); if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
-    const M = atkMods(att, def, w, melee, g), S = M.S, T = UD(def).T, head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
+    const M = atkMods(att, def, w, melee, g), S = M.S, T = unitT(def), head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
     // hit
     let hits;
     if (w.kw.torrent) { hits = A; await Tray.note(head, `${A} automatic hit${A === 1 ? '' : 's'} (torrent).`); }
@@ -284,6 +299,7 @@ async function resolveAttack(att, def, melee) {
     if (typeof w.D === 'number') dmgs = Array(fails).fill(w.D);
     else { const dd = await Tray.step({ kind: 'damage', title: head, label: `Roll damage: ${fails} × ${w.D}`, n: fails, need: 0, side: att.side, plain: true }); dmgs = dd.map(v => w.D === 'D3' ? Math.ceil(v / 2) : w.D === 'D6+1' ? v + 1 : v); }
     if (w.kw.melta && g.half) dmgs = dmgs.map(d => d + w.kw.melta);
+    if (subIs(def.side, 'carapace') && UD(def).vehicle) dmgs = dmgs.map(d => Math.max(1, d - 1));
     if (subIs(def.side, 'bodge')) {
       dmgs = dmgs.map(d => Math.min(d, UD(def).W)); const tot = dmgs.reduce((a, b) => a + b, 0);
       const fd = await Tray.step({ kind: 'fnp', title: `${UD(def).n}: Bodge Job`, label: `Roll for each lost wound: ${nd(tot)}, a 6 ignores it`, n: tot, need: 6, side: def.side });
@@ -389,7 +405,7 @@ const AI = {
   pickCharge(u) {
     let best = null;
     for (const v of chargeTargets(u)) {
-      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR'));
+      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') || u.adrenal);
       const gain = expected(u, v, true) - expected(v, u, true) * .5;
       const s = p * gain + (AI.isMelee(u) ? 1.5 : -1) + AI.noise() * .2;
       if (p > .25 && (!best || s > best.s)) best = { v, s };
@@ -406,6 +422,9 @@ const AI = {
     if (!u.models.length || !u.advanced || u.charged || u.fellBack || engaged(u) || !AI.isMelee(u) || !canGamb(u.side, 'rapid') || !chargeTargets(u).length) return;
     u.rapid = true; if (AI.pickCharge(u)) useGamb(u.side, 'rapid'); else u.rapid = false;
   },
-  surgeGambit(u, v) { if (canGamb(u.side, 'surge') && chargeNeed(u, v) - chargeBonus(u) >= 8) { useGamb(u.side, 'surge'); u.surge = true; } },
+  surgeGambit(u, v) {
+    if (canGamb(u.side, 'surge') && chargeNeed(u, v) - chargeBonus(u) >= 8) { useGamb(u.side, 'surge'); u.surge = true; }
+    if (canGamb(u.side, 'adrenal') && !hasRule(u, 'rerollCharge') && chargeNeed(u, v) - chargeBonus(u) >= 7) { useGamb(u.side, 'adrenal'); u.adrenal = true; }
+  },
   pickFight(u) { let best = null; for (const v of engagedWith(u)) { const s = expected(u, v, true); if (!best || s > best.s) best = { v, s }; } return best ? best.v : null; }
 };

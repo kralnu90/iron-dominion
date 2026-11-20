@@ -118,7 +118,7 @@ const Battle = {
   },
   async playerTurn(s, my, resumed) {
     if (!resumed) {
-      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false, rapid: false, surge: false, focus: false });
+      for (const u of unitsOf(s)) Object.assign(u, { moved: false, advanced: false, fellBack: false, shot: false, charged: false, chargedNow: false, fought: false, mvDone: false, rapid: false, surge: false, focus: false, adrenal: false });
       G.kills = [];
       for (const u of unitsOf(enemyOf(s))) Object.assign(u, { chargedNow: false, fought: false });
       setPhase('command'); G.cp[0]++; G.cp[1]++; G.cmdUsed = [false, false]; drawMissions(s);
@@ -127,6 +127,7 @@ const Battle = {
         u.shaken = false;
         const D = UD(u), Ld = unitLd(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= MW(u.models[0]);
         if (!below) continue;
+        if (unitsOf(s).some(v => hasRule(v, 'linkAura') && (v === u || unitDistIn(u, v) <= 9))) { log(`${D.n} is held by the Brood Link.`); continue; }
         const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${Ld}+`, n: 2, need: Ld, side: s }); this.alive(my);
         const t = d[0] + d[1];
         if (t < Ld) {
@@ -169,9 +170,9 @@ const Battle = {
   },
   async doCharge(u, v, my) {
     const need = chargeNeed(u, v), bonus = chargeBonus(u);
-    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +' + bonus : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') });
+    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +' + bonus : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') || !!u.adrenal });
     this.alive(my); Tray.close();
-    u.charged = true; u.surge = false;
+    u.charged = true; u.surge = false; u.adrenal = false;
     const roll = d[0] + d[1] + bonus;
     if (roll >= need && chargeMove(u, v, roll)) { u.chargedNow = true; u.moved = true; log(`${UD(u).n} charges into ${UD(v).n} (rolled ${roll}).`); Sfx.play('charge'); toast(`${UD(u).n} charges home!`); }
     else { log(`${UD(u).n} fails the charge (rolled ${roll}, needed ${need}).`); toast('Charge failed'); }
@@ -241,6 +242,7 @@ const Battle = {
       else if (id === 'oath') { u.oath = false; toast(`${UD(u).n} renews its Oath of Iron`); }
       else if (id === 'rapid') { u.rapid = true; toast(`${UD(u).n} can charge this turn`); }
       else if (id === 'surge') { u.surge = true; toast(`${UD(u).n}: +2 to its charge roll`); }
+      else if (id === 'adrenal') { u.adrenal = true; toast(`${UD(u).n} can re-roll its charge`); }
       else if (id === 'overc') { u.overc = true; toast(`${UD(u).n} re-rolls failed wounds this phase`); }
     }
     this.render();
@@ -289,7 +291,7 @@ const Battle = {
     const wl = Object.entries(ws).map(([w, n]) => { const x = WP(w); return `<div class="wl"><b>${n > 1 ? n + '× ' : ''}${x.n}</b> <span>${x.r ? x.r + '"' : 'Melee'} · A${x.A} · ${x.kw.torrent ? 'auto' : x.sk + '+'} · S${x.S} · AP${x.AP} · D${x.D}${Object.keys(x.kw).length ? ' · ' + Object.keys(x.kw).join(', ') : ''}</span></div>`; }).join('');
     const flags = [u.shaken && 'Shaken', u.moved && (u.advanced ? 'Advanced' : u.fellBack ? 'Fell back' : 'Moved'), u.shot && 'Shot', u.chargedNow && 'Charged', engaged(u) && 'In combat'].filter(Boolean);
     return `<div class="card"><div class="card-h"><b style="color:${ARMIES[G.players[u.side].army].col}">${D.ic} ${D.n}</b><span>${u.models.length}/${u.startN} models · ${u.lead ? 'Led unit' : D.role}</span></div>
-      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? unitM(u) + '"' : k === 'Sv' ? saveNeed(u, 0, false) + '+' : k === 'Ld' ? unitLd(u) + '+' : k === 'OC' ? modelOC(u, u.models.find(m => !m.ldr) || u.models[0]) : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
+      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? unitM(u) + '"' : k === 'T' ? unitT(u) : k === 'Sv' ? saveNeed(u, 0, false) + '+' : k === 'Ld' ? unitLd(u) + '+' : k === 'OC' ? modelOC(u, u.models.find(m => !m.ldr) || u.models[0]) : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
       ${wl}${D.rule ? `<div class="rule"><b>${D.rule.n}:</b> ${D.rule.txt}</div>` : ''}${(() => { if (!u.lead) return ''; const L = UNITS[u.lead]; return `<div class="rule ldr-line"><b>${L.ic} Led by ${L.n}</b> (W${L.W}, Sv${L.Sv}+${L.ward ? `, ward ${L.ward}+` : ''}, takes wounds last)${L.rule ? `<br><b>${L.rule.n}:</b> ${L.rule.txt}` : ''}<br><b>${L.lead.n}:</b> ${L.lead.txt}</div>`; })()}${(() => { const x = subOf(u.side); return x ? `<div class="rule sub-line"><b>${x.rn}</b> (${x.n}): ${x.txt}</div>` : ''; })()}${flags.length ? `<div class="flags">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}</div>`;
   },
   panelHtml(s, u, vu) {
@@ -307,7 +309,7 @@ const Battle = {
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
         else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
       } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🔫 Shoot', 'gold') + (!u.focus && canGamb(s, 'focus') ? B('g_focus', '🎯 Focused Fire · 1 CP', 'gmb') : '') + (u.oath && canGamb(s, 'oath') ? B('g_oath', '⚜ Renewed Oath · 1 CP', 'gmb') : '') + (!u.overc && canGamb(s, 'overc') ? B('g_overc', '⚡ Overcharge · 1 CP', 'gmb') : ''); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.fellBack ? "Can't shoot after falling back." : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
-      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold') + (!u.surge && canGamb(s, 'surge') ? B('g_surge', '⚙ Scrap Surge · 1 CP', 'gmb') : ''); else if (u.advanced && !u.rapid && !u.charged && !engaged(u) && !u.fellBack && chargeTargets(u).length && canGamb(s, 'rapid')) { act = B('g_rapid', '⇶ Rapid Assault · 1 CP', 'gmb'); hint = 'This unit advanced. Rapid Assault lets it charge anyway.'; } else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
+      else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold') + (!u.surge && canGamb(s, 'surge') ? B('g_surge', '⚙ Scrap Surge · 1 CP', 'gmb') : '') + (!u.adrenal && !hasRule(u, 'rerollCharge') && canGamb(s, 'adrenal') ? B('g_adrenal', '♨ Adrenal Surge · 1 CP', 'gmb') : ''); else if (u.advanced && !u.rapid && !u.charged && !engaged(u) && !u.fellBack && chargeTargets(u).length && canGamb(s, 'rapid')) { act = B('g_rapid', '⇶ Rapid Assault · 1 CP', 'gmb'); hint = 'This unit advanced. Rapid Assault lets it charge anyway.'; } else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;
     const next = { move: 'End movement →', shoot: 'End shooting →', charge: 'End charges → Fight' }[G.phase];
     return `${hint ? `<div class="msg">${hint}</div>` : ''}<div class="acts">${act}${B('end', next, 'end')}</div>${this.unitCard(vu)}`;

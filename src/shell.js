@@ -8,6 +8,7 @@ const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.3.2', '20 Nov 2026', 'The Chitin Brood', ['A fourth army: the Chitin Brood, a fast alien swarm that charges even after advancing', 'Seven new datasheets: Brood Matriarch, Spawn-Warden, Skitterling Swarm, Razorfiend Pack, Vexwings, Tunnel Wyrm and the Chitin Behemoth', 'The Tunnel Wyrm bursts up in no-man\'s land after both armies deploy', 'Three sub-factions and a new Gambit, Adrenal Surge', 'Bring It Down now also counts Monsters']],
   ['0.3.1', '20 Nov 2026', 'The Auric Concord', ['A third army: the Auric Concord, gilded merchant-lords with battlesuits, drones and long guns', 'Seven new datasheets: Factor-Prime, Drone-Marshal, Lumen Wardens, Longshot Marksmen, Skimmer Drones, Aegis Battlesuits and the Railspire Strider', 'Army rule Measured Fire, three sub-factions and a new Gambit, Overcharge', 'Choose your enemy when you start a battle, or let the game surprise you', "The Covenant starter force now fights as the Order of the Hunt"]],
   ['0.3.0', '20 Nov 2026', 'Tactics', ['Gambits: spend command points on Focused Fire, Rapid Assault, Go to Ground, Hold Fast, plus one special order per army', 'Secondary missions: hold two mission cards and score them for bonus VP; swap one for 1 CP', 'Three battlefields: the Ruined Hab-Block, the Crossroads and the Pincer (deploy from opposite corners)', 'Deployment zones are shaded in round 1, and the end screen splits objective and mission VP']],
   ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
@@ -51,7 +52,7 @@ const Shell = {
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
       <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 3b: The Auric Concord</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 3c: The Chitin Brood</div></div>`);
   },
   async play(fromList) {
     const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);

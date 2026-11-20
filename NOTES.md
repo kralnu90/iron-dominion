@@ -45,4 +45,10 @@ Kris may swap the two new armies for others: check before building 3b.
 - Balance (starters): Concord v Covenant 13-19 once the Covenant starter switched to the Order of the Hunt (Anvil shut down the Concord's AP-1 guns: 6-25); Covenant v Rust 15-16 with Hunt; Concord v Rust 22-10 (revisit in 3d).
 - /tmp/idsoak5.py args: N mode pts covSub rustSub extraJS armyA armyB.
 
-## Next: 3c, the Chitin Brood
+## v0.3.2 Stage 3c "The Chitin Brood" (20 Nov 2026)
+- Fourth army (col #b77be0): broodMatriarch (monster leader, no attach; aura Brood Link auto-passes battle-shock within 9"), spawnWarden (lead +1 T via unitT()), skitterlings (10/20 cheap swarm), razorfiends (no guns, re-roll charges), vexwings, tunnelWyrm (burrow(): placed after both deployments outside zones, >9" from enemies), behemoth.
+- Army rule Relentless Swarm: charge after advancing, +1 to charge (shares the +2 cap). Subs: gorge (Feeding Frenzy +1 hit in melee when charging), shell (Hardened Carapace: -1 Damage vs Monsters), swarm (+2" Move). Gambit adrenal (re-roll the charge). Monsters use the vehicle flag (square tokens, count for Bring It Down).
+- Balance after buffs (skitter claws A3, razorfiends W4 A5, vexwings Sv4, wyrm T9 W10): Brood v Covenant 11-21, v Rust 7-9, v Concord 8-8. The Covenant is the strongest army overall: nerf it a touch in 3d.
+
+## Next: 3d, Strike Force
+1,000 points on a bigger scrolling board, a four-army balance pass, 2,000 only if phones cope.

@@ -21,7 +21,7 @@ const Tray = {
   close() { if (this.el) this.el.classList.remove('on'); },
   autoPolicy(o, d) { // rerolls the AI (or quick dice) takes on its own
     const fail = v => o.need ? v < o.need : false;
-    if (o.kind === 'save') return d;
+    if (o.kind === 'save' || o.kind === 'fnp') return d;
     if (o.rrFails) d = d.map(v => fail(v) ? d6() : v);
     else if (o.rrOnes) d = d.map(v => v === 1 ? d6() : v);
     if (o.oath && d.filter(fail).length > d.length / 2) { o.oath.oath = true; d = d.map(v => fail(v) ? d6() : v); }
@@ -48,7 +48,7 @@ const Tray = {
     const html = d.map(v => this.die(v, o.sum || o.plain ? '' : this.ok(o, v) ? 'good' : 'bad')).join('');
     this.el.querySelector('.dice').classList.remove('rolling'); this.el.querySelector('.dice').innerHTML = html;
     if (o.sum) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', this.sumLine(o, d));
-    else if (!o.plain) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', `<div class="tray-sum">${d.filter(v => this.ok(o, v)).length} of ${d.length} ${o.kind === 'save' ? 'saved' : 'succeed'}</div>`);
+    else if (!o.plain) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', `<div class="tray-sum">${d.filter(v => this.ok(o, v)).length} of ${d.length} ${o.kind === 'save' ? 'saved' : o.kind === 'fnp' ? 'ignored' : 'succeed'}</div>`);
     await this.waitTap(Settings.fast ? 700 : 1500);
   },
   async tumble(d) { const box = this.el.querySelector('.dice'); for (let k = 0; k < 6; k++) { box.innerHTML = d.map(() => this.die(d6())).join(''); await sleep(55); } },
@@ -67,11 +67,11 @@ const Tray = {
           if (o.sum && o.rrAll && !usedFails) btns.push(`<button class="b" data-a="all">↻ Re-roll the charge</button>`);
           if (!cmdUsed && G.cp[o.side] >= 1) btns.push(`<button class="b ${picking ? 'gold' : ''}" data-a="cmd">${picking ? 'Tap a die to re-roll' : '✦ Command re-roll (1 CP)'}</button>`);
           if (o.sum || o.plain) btns.push(`<button class="b gold" data-a="done">Continue →</button>`);
-          else btns.push(`<button class="b gold" data-a="sweep">${o.kind === 'save' ? '🧹 Clear saved dice' : '🧹 Sweep away misses'}</button>`);
+          else btns.push(`<button class="b gold" data-a="sweep">${o.kind === 'save' ? '🧹 Clear saved dice' : o.kind === 'fnp' ? '🧹 Sweep away failed rolls' : '🧹 Sweep away misses'}</button>`);
         } else btns.push(`<button class="b gold big" data-a="done">Continue →</button>`);
         const shown = d.map((v, i) => [v, i]).filter(([v]) => !swept || (o.kind === 'save' ? !this.ok(o, v) : this.ok(o, v)));
         const n = shown.length;
-        const after = swept ? `<div class="tray-sum ${n ? 'good' : 'bad'}">${o.kind === 'save' ? `${n} unsaved` : `${n} ${o.kind === 'hit' ? 'hit' : 'wound'}${n === 1 ? '' : 's'}`}</div>` : '';
+        const after = swept ? `<div class="tray-sum ${n ? 'good' : 'bad'}">${o.kind === 'save' ? `${n} unsaved` : o.kind === 'fnp' ? `${n} ignored` : `${n} ${o.kind === 'hit' ? 'hit' : 'wound'}${n === 1 ? '' : 's'}`}</div>` : '';
         this.open(`<div class="tray-title">${o.title}</div><div class="tray-label">${G.players[o.side].name} · ${o.label}</div>
           <div class="dice ${picking ? 'picking' : ''}">${shown.map(([v, i]) => rolled ? this.die(v, o.sum || o.plain ? '' : fail(v) ? 'bad' : 'good', i) : this.die(0, 'blank', i)).join('')}</div>
           ${rolled && o.sum ? this.sumLine(o, d) : ''}${after}<div class="tray-btns">${btns.join('')}</div>`);
@@ -100,7 +100,7 @@ const Tray = {
 const Battle = {
   root: null, ui: { sel: null, mode: null, reach: null, targets: null }, endPhase: null, sid: 0,
   start(cfg) { newBattle(cfg); this.sid++; this.ui = {}; Tray.close(); this.render(); this.loop(this.sid); },
-  resume(state) { G = state; NEXT_ID = Math.max(...G.units.flatMap(u => [u.uid, ...u.models.map(m => m.id)])) + 1; this.sid++; this.ui = {}; this.render(); this.loop(this.sid, true); },
+  resume(state) { G = migrate(state); NEXT_ID = Math.max(...G.units.flatMap(u => [u.uid, ...u.models.map(m => m.id)])) + 1; this.sid++; this.ui = {}; this.render(); this.loop(this.sid, true); },
   alive(my) { if (my !== this.sid) throw 'abort'; },
   async loop(my, resumed) {
     try {
@@ -108,7 +108,7 @@ const Battle = {
       while (!G.over) {
         await this.playerTurn(G.turn, my, skipStart); skipStart = false; this.alive(my);
         if (G.over) break;
-        const vp = scoreTurn(G.turn); if (vp) { log(`${pname(G.turn)} scores ${vp} VP from objectives.`); toast(`${pname(G.turn)} scores ${vp} VP`); }
+        const vp = scoreTurn(G.turn); if (vp) { log(`${pverb(G.turn, 'scores', 'score')} ${vp} VP from objectives.`); toast(`${pverb(G.turn, 'scores', 'score')} ${vp} VP`); }
         if (G.turn !== G.first) { if (G.round >= 5) { G.over = { winner: G.vp[0] > G.vp[1] ? 0 : G.vp[1] > G.vp[0] ? 1 : -1, why: 'vp' }; break; } G.round++; }
         G.turn = enemyOf(G.turn); this.render();
       }
@@ -123,10 +123,10 @@ const Battle = {
       this.banner(`Round ${G.round} · ${pname(s)}`, 'Command phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
       for (const u of unitsOf(s)) {
         u.shaken = false;
-        const D = UD(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= D.W;
+        const D = UD(u), Ld = unitLd(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= MW(u.models[0]);
         if (!below) continue;
-        const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${D.Ld}+`, n: 2, need: D.Ld, side: s }); this.alive(my);
-        const t = d[0] + d[1]; if (t < D.Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
+        const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${Ld}+`, n: 2, need: Ld, side: s }); this.alive(my);
+        const t = d[0] + d[1]; if (t < Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
       }
       Tray.close();
     }
@@ -149,7 +149,7 @@ const Battle = {
     for (const u of unitsOf(s)) {
       if (engaged(u)) { if (!AI.isMelee(u) && expected(engagedWith(u)[0], u, true) > expected(u, engagedWith(u)[0], true)) { const b = AI.bestMove(u, 0); if (b) { moveUnit(u, b.c, b.r); u.fellBack = true; u.moved = true; log(`${UD(u).n} falls back.`); await pause(500); } } continue; }
       let adv = 0;
-      if (AI.isMelee(u)) { const near = Math.min(...unitsOf(enemyOf(s)).map(v => unitDistIn(u, v))); if (near > UD(u).M + 9) { adv = d6(); u.advanced = true; } }
+      if (AI.isMelee(u)) { const near = Math.min(...unitsOf(enemyOf(s)).map(v => unitDistIn(u, v))); if (near > unitM(u) + 9) { adv = d6(); u.advanced = true; } }
       const b = AI.bestMove(u, adv);
       if (b && (b.c !== u.models[0].x || b.r !== u.models[0].y)) { moveUnit(u, b.c, b.r); u.moved = true; if (adv) log(`${UD(u).n} advances ${adv}".`); this.ui.flash = u.uid; await pause(450); }
     }
@@ -162,7 +162,7 @@ const Battle = {
   },
   async doCharge(u, v, my) {
     const need = chargeNeed(u, v), bonus = chargeBonus(u);
-    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +1' : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: !!(UD(u).rule && UD(u).rule.id === 'rerollCharge') });
+    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +' + bonus : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') });
     this.alive(my); Tray.close();
     u.charged = true;
     const roll = d[0] + d[1] + bonus;
@@ -249,7 +249,7 @@ const Battle = {
     const objs = OBJECTIVES.map(([c, r], i) => `<div class="obj" style="left:${(c - 1.1) * cell}px;top:${(r - 1.1) * cell}px;width:${cell * 3.2}px;height:${cell * 3.2}px;border-color:${ctl[i] >= 0 ? col(ctl[i]) : 'rgba(255,255,255,.35)'};background:${ctl[i] >= 0 ? col(ctl[i]) + '22' : 'transparent'}"><span style="background:${ctl[i] >= 0 ? col(ctl[i]) : '#777'}">${i + 1}</span></div>`).join('');
     const models = liveUnits().map(u => {
       const D = UD(u), sel = ui.sel === u.uid, tgt = ui.targets && ui.targets.has(u.uid), aim = ui.aim === u.uid, view = ui.view === u.uid, fl = ui.flash === u.uid;
-      return u.models.map((m, i) => `<div class="mdl ${D.vehicle ? 'veh' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${aim ? 'aim' : ''} ${view && !sel ? 'view' : ''} ${fl ? 'fl' : ''} ${u.shaken ? 'shk' : ''}" style="left:${m.x * cell + cell * .08}px;top:${m.y * cell + cell * .08}px;width:${cell * .84}px;height:${cell * .84}px;background:radial-gradient(circle at 35% 30%,${col(u.side)},${dark(u.side)});font-size:${cell * .48}px">${i === 0 || D.vehicle ? D.ic : ''}${m.w < D.W ? `<i class="wd">${m.w}</i>` : ''}</div>`).join('');
+      return u.models.map((m, i) => `<div class="mdl ${D.vehicle ? 'veh' : ''} ${m.ldr ? 'ldr' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${aim ? 'aim' : ''} ${view && !sel ? 'view' : ''} ${fl ? 'fl' : ''} ${u.shaken ? 'shk' : ''}" style="left:${m.x * cell + cell * .08}px;top:${m.y * cell + cell * .08}px;width:${cell * .84}px;height:${cell * .84}px;background:radial-gradient(circle at 35% 30%,${col(u.side)},${dark(u.side)});font-size:${cell * .48}px">${m.ldr ? UNITS[m.p].ic : i === 0 || D.vehicle ? D.ic : ''}${m.w < MW(m) ? `<i class="wd">${m.w}</i>` : ''}</div>`).join('');
     }).join('');
     const s = this.mySide(), u = this.unit(ui.sel), vu = this.unit(ui.view || ui.sel);
     root.innerHTML = `
@@ -270,15 +270,15 @@ const Battle = {
     u.models.forEach(m => m.guns.concat(m.melee).forEach(w => ws[w] = (ws[w] || 0) + 1));
     const wl = Object.entries(ws).map(([w, n]) => { const x = WP(w); return `<div class="wl"><b>${n > 1 ? n + '× ' : ''}${x.n}</b> <span>${x.r ? x.r + '"' : 'Melee'} · A${x.A} · ${x.kw.torrent ? 'auto' : x.sk + '+'} · S${x.S} · AP${x.AP} · D${x.D}${Object.keys(x.kw).length ? ' · ' + Object.keys(x.kw).join(', ') : ''}</span></div>`; }).join('');
     const flags = [u.shaken && 'Shaken', u.moved && (u.advanced ? 'Advanced' : u.fellBack ? 'Fell back' : 'Moved'), u.shot && 'Shot', u.chargedNow && 'Charged', engaged(u) && 'In combat'].filter(Boolean);
-    return `<div class="card"><div class="card-h"><b style="color:${ARMIES[G.players[u.side].army].col}">${D.ic} ${D.n}</b><span>${u.models.length}/${u.startN} models · ${D.role}</span></div>
-      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? D.M + '"' : k === 'Sv' || k === 'Ld' ? D[k] + '+' : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
-      ${wl}${D.rule ? `<div class="rule"><b>${D.rule.n}:</b> ${D.rule.txt}</div>` : ''}${flags.length ? `<div class="flags">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}</div>`;
+    return `<div class="card"><div class="card-h"><b style="color:${ARMIES[G.players[u.side].army].col}">${D.ic} ${D.n}</b><span>${u.models.length}/${u.startN} models · ${u.lead ? 'Led unit' : D.role}</span></div>
+      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? unitM(u) + '"' : k === 'Sv' ? saveNeed(u, 0, false) + '+' : k === 'Ld' ? unitLd(u) + '+' : k === 'OC' ? modelOC(u, u.models.find(m => !m.ldr) || u.models[0]) : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
+      ${wl}${D.rule ? `<div class="rule"><b>${D.rule.n}:</b> ${D.rule.txt}</div>` : ''}${(() => { if (!u.lead) return ''; const L = UNITS[u.lead]; return `<div class="rule ldr-line"><b>${L.ic} Led by ${L.n}</b> (W${L.W}, Sv${L.Sv}+${L.ward ? `, ward ${L.ward}+` : ''}, takes wounds last)${L.rule ? `<br><b>${L.rule.n}:</b> ${L.rule.txt}` : ''}<br><b>${L.lead.n}:</b> ${L.lead.txt}</div>`; })()}${(() => { const x = subOf(u.side); return x ? `<div class="rule sub-line"><b>${x.rn}</b> (${x.n}): ${x.txt}</div>` : ''; })()}${flags.length ? `<div class="flags">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}</div>`;
   },
   panelHtml(s, u, vu) {
     const ui = this.ui, B = (a, t, cls = '') => `<button class="b ${cls}" data-act="${a}">${t}</button>`;
     if (G.over) return `<div class="msg">The battle is over.</div>`;
     if (ui.mode === 'pick') return `<div class="msg">${ui.msg}</div>`;
-    if (s === null) return `<div class="msg">${pname(G.turn)} is ${{ move: 'moving', shoot: 'shooting', charge: 'charging', fight: 'fighting', command: 'giving orders' }[G.phase] || 'thinking'}…</div>${this.unitCard(vu)}`;
+    if (s === null) return `<div class="msg">${pverb(G.turn, 'is', 'are')} ${{ move: 'moving', shoot: 'shooting', charge: 'charging', fight: 'fighting', command: 'giving orders' }[G.phase] || 'thinking'}…</div>${this.unitCard(vu)}`;
     if (G.phase === 'fight' || G.phase === 'command') return `<div class="msg">${G.phase === 'fight' ? 'Combat is being resolved…' : 'Command phase'}</div>${this.unitCard(vu)}`;
     let act = '', hint = '';
     const phaseHint = { move: 'Tap one of your units, then choose how it moves.', shoot: 'Tap a unit that can shoot, then tap Shoot and pick a target.', charge: 'Tap a unit within 12" of the enemy to charge.' }[G.phase];
@@ -287,7 +287,7 @@ const Battle = {
       else if (G.phase === 'move') {
         if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
-        else act = B('move', `➜ Move ${UD(u).M}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
+        else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
       } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🎯 Shoot', 'gold'); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
       else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold'); else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;

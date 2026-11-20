@@ -8,6 +8,7 @@ const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
   ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
 ];
 
@@ -46,18 +47,33 @@ const Shell = {
       <h1>Iron Dominion</h1><p class="tag">A grim war for the last worlds. Hold the line.</p>
       ${save ? `<button class="tile big" onclick="Shell.resume()"><span>▶</span>Continue battle<small>Round ${save.round} · ${save.players[0].name} vs ${save.players[1].name}</small></button>` : ''}
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
-      <div class="row"><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
+      <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 1: First blood</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 2: Muster</div></div>`);
   },
-  async play() {
-    const mode = await choose('New battle', 'A 500-point skirmish. Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
+  async play(fromList) {
+    const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
     if (!mode) return;
-    const army = await choose(mode === 'pp' ? 'Player 1: choose your army' : 'Choose your army', Object.entries(ARMIES).map(([k, a]) => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
+    const pts = fromList ? fromList.pts : await choose('Battle size', POINTS.map(p => `<b>${p.pts} pts · ${p.n}</b>: about ${p.pts === 500 ? '5 or 6' : '7 to 9'} units a side.`).join('<br>'), POINTS.map((p, i) => ({ l: `${p.pts} pts · ${p.n}`, v: p.pts, p: !i })).concat([{ l: 'Back', v: null }]));
+    if (!pts) return;
+    const army = fromList ? fromList.army : await choose(mode === 'pp' ? 'Player 1: choose your army' : 'Choose your army', Object.entries(ARMIES).map(([k, a]) => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
     if (!army) return;
+    const l1 = fromList ? JSON.parse(JSON.stringify(fromList)) : await this.pickList(army, pts, mode === 'pp' ? 'Player 1' : 'Your');
+    if (!l1) return;
     const other = Object.keys(ARMIES).find(k => k !== army);
-    const players = mode === 'ai' ? [{ name: 'You', army, type: 'human' }, { name: 'The AI', army: other, type: 'ai' }] : [{ name: 'Player 1', army, type: 'human' }, { name: 'Player 2', army: other, type: 'human' }];
-    this.startBattle({ players, diff: Settings.diff });
+    const l2 = mode === 'ai' ? randomList(other, pts) : await this.pickList(other, pts, 'Player 2');
+    if (!l2) return;
+    const players = mode === 'ai' ? [{ name: 'You', army, type: 'human', list: l1 }, { name: 'The AI', army: other, type: 'ai', list: l2 }] : [{ name: 'Player 1', army, type: 'human', list: l1 }, { name: 'Player 2', army: other, type: 'human', list: l2 }];
+    this.startBattle({ players, diff: Settings.diff, pts });
+  },
+  async pickList(army, pts, who) {
+    const mine = Muster.all().filter(L => L.army === army && L.pts === pts && !listProblems(L).length), opts = [];
+    if (pts === 500) opts.push({ l: 'Starter force', v: 'starter', p: 1 });
+    mine.forEach(L => opts.push({ l: `${esc(L.name)}<small>${SUBS[army][L.sub].n} · ${listPts(L)} pts</small>`, v: L.id }));
+    opts.push({ l: '🎲 Random force', v: 'random', p: !opts.length }, { l: 'Back', v: null });
+    const v = await choose(`${who} army list`, `<b style="color:${ARMIES[army].col}">${ARMIES[army].n}</b> at ${pts} points.${mine.length ? '' : ' Build and save your own lists in Muster on the main menu.'}`, opts);
+    if (!v) return null;
+    return v === 'starter' ? starterList(army) : v === 'random' ? randomList(army, pts) : JSON.parse(JSON.stringify(Muster.get(v)));
   },
   startBattle(cfg) { Store.del('save'); this.battleScreen(); Battle.start(cfg); },
   battleScreen() {
@@ -107,6 +123,9 @@ const Shell = {
       <li><b>Fight:</b> every unit in combat fights, chargers first.</li></ol>
       <p><b>The dice:</b> roll to hit (the weapon's skill or better), sweep away the misses, roll to wound (Strength against Toughness), then the defender rolls saves (worsened by AP). Each unsaved wound deals the weapon's Damage. Re-rolls show up as buttons: tap them, or spend 1 CP on a command re-roll and tap the die you want again.</p>
       <p><b>Objectives:</b> a marker belongs to the side with the most Objective Control (OC) within 3". From round 2, at the end of your turn you score 5 VP for holding one, 5 more for holding two or more, and 5 more for holding more than the enemy.</p>
+      <p><b>Muster:</b> build your own armies from the main menu. Spend points on units, pick squad sizes and swap wargear for free. Every list needs a Leader.</p>
+      <p><b>Leaders</b> can join a squad (gold-ringed on the field). The squad keeps its own stats, the leader takes wounds last, and the squad gets the leader's bonus. If the squad dies, the leader fights on alone.</p>
+      <p><b>Sub-factions:</b> each army picks one, and its rule covers the whole army. Tap any unit to see your army's rule on its card.</p>
       <p><b>Tap any model</b> to see its unit's datasheet. Prefer the dice rolled for you? Choose Quick dice in Settings.</p></div>`);
   },
   news() { sheet(`<h2>What's new</h2>${CHANGES.map(([v, d, t, items]) => `<h3>${v} · ${t} <small>${d}</small></h3><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`).join('')}`); },

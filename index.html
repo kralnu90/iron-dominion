@@ -39,6 +39,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .b.big{padding:13px 22px;font-size:17px}
 .b.end{background:#3a2a20;border-color:#7a5a3a}
 .b.danger{background:#5a1c18;border-color:#8a3a30;margin-top:10px}
+.dlg-btns .b.danger{margin-top:0}
 .ov{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px}
 .dlg{background:linear-gradient(170deg,#2a221c,#17120f);border:1px solid var(--gold);border-radius:16px;padding:16px;width:min(380px,100%);max-height:88vh;overflow:auto;text-align:center;box-shadow:0 18px 40px rgba(0,0,0,.6)}
 .dlg.wide{width:min(460px,100%);text-align:left}
@@ -47,6 +48,33 @@ button{font:inherit;color:inherit;cursor:pointer}
 .dlg-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
 .prose p,.prose li{font-size:14px}.prose ol{padding-left:20px}.center{text-align:center}
 .small{color:var(--dim);font-size:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.b small{display:block;font-weight:400;font-size:11px;opacity:.8;margin-top:2px}
+.b[disabled],.tile[disabled]{opacity:.4;pointer-events:none}
+/* muster */
+.mus{max-width:460px;margin:0 auto;padding:14px 14px 30px;display:flex;flex-direction:column;gap:10px}
+.mus-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.mus-top h2{color:var(--gold);margin:0}.mus-top span{width:70px}
+.mus .tag{color:var(--dim);font-size:13px;margin:0;text-align:center}
+.lname{flex:1;min-width:0;background:#14110f;border:1px solid var(--edge);border-radius:10px;color:var(--gold);font:700 17px Georgia,serif;padding:8px 10px;text-align:center}
+.lrow{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--edge);border-left:5px solid var(--c);background:#221c18}
+.lrow b{font-size:16px}.lrow span{color:var(--dim);font-size:12px}.lrow em{color:#ff9a7a;font-size:12px;font-style:normal}.lrow i{color:#7be08f;font-size:12px;font-style:normal}
+.lhead{background:#221c18;border:1px solid var(--edge);border-top:4px solid var(--c);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.lhead>b{color:var(--c);font-family:Georgia,serif;font-size:16px}
+.chip{align-self:flex-start;border:1px solid var(--c);background:transparent;color:var(--text);border-radius:20px;padding:4px 12px;font-weight:700;font-size:13px}
+.sub-txt{font-size:12px;color:#e8d9a8}
+.bar{height:10px;background:#14110f;border-radius:6px;overflow:hidden}.bar div{height:100%;transition:width .3s}
+.bar-l{display:flex;justify-content:space-between;font-size:12px;color:var(--dim)}
+.probs{color:#ff9a7a;font-size:12px}.okay{color:#7be08f;font-size:12px;font-weight:700}
+.urows{display:flex;flex-direction:column;gap:6px}
+.urow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--edge);background:#1d1714;text-align:left}
+.urow.led{margin-left:22px;border-color:var(--gold);background:#241d14}
+.urow .ic{font-size:22px;width:28px;text-align:center;color:var(--gold)}.urow .nm{flex:1;display:flex;flex-direction:column}.urow small{color:var(--dim);font-size:12px}.urow .pt{font-weight:800;color:var(--gold)}
+.empty{color:var(--dim);text-align:center;font-size:13px;padding:14px}
+.dlist{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.ds{background:#1d1714;border:1px solid var(--edge);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px}
+.ds-h{display:flex;align-items:center;gap:8px}.ds-h .ic{font-size:20px;color:var(--gold)}.ds-h b{flex:1}.ds-h .pt{color:var(--gold);font-weight:700;font-size:13px}
+.ds .rl{color:#e8d9a8}.ds .b{align-self:flex-end}
+.seg{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.seg .b{padding:6px 10px;font-size:13px}
 .set{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0}
 .set select,.set input[type=range]{flex:0 0 55%}
 select,input,textarea{background:#1a1512;color:var(--text);border:1px solid var(--edge);border-radius:8px;padding:7px;font:inherit;width:100%}
@@ -73,6 +101,8 @@ body.in-battle{overflow-x:hidden}
 .obj span{width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;color:#111;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px rgba(0,0,0,.4)}
 .mdl{position:absolute;border-radius:50%;border:2px solid rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;color:#111;font-weight:800;line-height:1;box-shadow:0 2px 4px rgba(0,0,0,.6);transition:left .35s ease,top .35s ease}
 .mdl.veh{border-radius:22%}
+.mdl.ldr{border-color:var(--gold);border-width:3px}
+.rule.sub-line{color:var(--dim)}
 .mdl.sel{box-shadow:0 0 0 3px #fff,0 0 12px #fff}
 .mdl.view{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
 .mdl.tgt{box-shadow:0 0 0 3px #ff5a4a,0 0 12px #ff5a4a;animation:pulse 1s infinite}
@@ -126,7 +156,7 @@ body.in-battle{overflow-x:hidden}
    IRON DOMINION: armies, weapons, battlefield (all original names and numbers)
    Distances are in inches; the board is a grid of 2" squares.
    ============================================================================ */
-const GAME_VERSION = '0.1.0';
+const GAME_VERSION = '0.2.0';
 const COLS = 15, ROWS = 21, SQ = 2;   // 30" x 42" skirmish board
 
 /* Weapon keywords: rapid N (+N attacks at half range), torrent (auto-hits), heavy (+1 to hit if stationary),
@@ -147,48 +177,99 @@ const WEAPONS = {
   rivetGun:    { n: 'Rivet gun', r: 18, A: 3, sk: 5, S: 6, AP: -1, D: 1, kw: {} },
   bigCleaver:  { n: 'Gut cleaver', r: 0, A: 5, sk: 2, S: 8, AP: -2, D: 2, kw: {} },
   scrapPistol: { n: 'Scrap pistol', r: 12, A: 1, sk: 5, S: 4, AP: 0, D: 1, kw: { pistol: 1, assault: 1 } },
-  hacker:      { n: 'Hacker', r: 0, A: 3, sk: 3, S: 4, AP: -1, D: 1, kw: {} },
+  hacker:      { n: 'Hacker', r: 0, A: 3, sk: 3, S: 4, AP: 0, D: 1, kw: {} },
   smasher:     { n: 'Smasher', r: 0, A: 3, sk: 3, S: 6, AP: -1, D: 2, kw: {} },
   smogThrower: { n: 'Smog thrower', r: 12, A: 'D6', sk: 0, S: 4, AP: 0, D: 1, kw: { torrent: 1, assault: 1 } },
   twinRivets:  { n: 'Twin rivet guns', r: 18, A: 3, sk: 5, S: 6, AP: -1, D: 1, kw: { twin: 1, assault: 1 } },
   riderHook:   { n: 'Ripper hooks', r: 0, A: 3, sk: 3, S: 5, AP: -1, D: 1, kw: {} },
   roarCannon:  { n: 'Roar cannon', r: 36, A: 4, sk: 5, S: 7, AP: -1, D: 2, kw: { heavy: 1 } },
-  crusher:     { n: 'Crusher claws', r: 0, A: 4, sk: 4, S: 12, AP: -2, D: 3, kw: {} }
+  crusher:     { n: 'Crusher claws', r: 0, A: 4, sk: 4, S: 12, AP: -2, D: 3, kw: {} },
+  /* Stage 2 wargear */
+  masterCarbine: { n: 'Master-forged carbine', r: 24, A: 2, sk: 2, S: 4, AP: -1, D: 2, kw: { rapid: 1 } },
+  stormHammer: { n: 'Storm hammer', r: 0, A: 4, sk: 3, S: 8, AP: -2, D: 2, kw: {} },
+  sunRifle:    { n: 'Sun rifle', r: 24, A: 2, sk: 3, S: 7, AP: -2, D: 1, kw: { rapid: 1 } },
+  arcCannon:   { n: 'Arc cannon', r: 36, A: 3, sk: 3, S: 8, AP: -1, D: 2, kw: { heavy: 1 } },
+  fusionLance: { n: 'Fusion lance', r: 12, A: 1, sk: 3, S: 9, AP: -4, D: 'D6', kw: { melta: 2, twin: 1, assault: 1 } },
+  lanceCannon: { n: 'Lance cannon', r: 36, A: 2, sk: 3, S: 10, AP: -3, D: 'D6+1', kw: { heavy: 1 } },
+  oathMaul:    { n: 'Oath maul', r: 0, A: 5, sk: 2, S: 6, AP: -1, D: 2, kw: {} },
+  wreckerClaw: { n: 'Wrecker claw', r: 0, A: 4, sk: 3, S: 10, AP: -2, D: 2, kw: {} },
+  spikeLauncher: { n: 'Spike launcher', r: 24, A: 1, sk: 5, S: 9, AP: -2, D: 'D3', kw: {} },
+  flameBelcher: { n: 'Flame belcher', r: 12, A: '2D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1 } },
+  sparkWelder: { n: 'Spark welder', r: 12, A: 'D6', sk: 0, S: 5, AP: -1, D: 1, kw: { torrent: 1, pistol: 1 } },
+  bigWrench:   { n: 'Big wrench', r: 0, A: 3, sk: 3, S: 7, AP: -1, D: 2, kw: {} }
 };
 
-/* Each unit lists its models: [count, guns, melee]. Plain models die first, specialists last. */
+/* Each unit lists its models: [count, guns, melee]. Plain models die first, specialists last.
+   sizes: squad sizes and their points (extra models join the first group).
+   opts: free wargear swaps; choice 0 is the starting loadout. g = model group, f = guns or melee.
+   Leaders can join one of the units in "leads"; their "lead" ability then applies to that unit. */
 const UNITS = {
   /* ---------------- THE IRONCLAD COVENANT ---------------- */
-  knightCaptain: { n: 'Knight-Captain', role: 'Leader', pts: 65, ic: '♛', M: 6, T: 4, Sv: 3, W: 5, Ld: 6, OC: 1, ward: 4,
-    models: [[1, ['arcPistol'], ['powerSword']]], rule: { id: 'rerollOnes', n: 'Lead from the Front', txt: 'Friendly units within 6" may re-roll hit rolls of 1.' } },
-  shieldbrothers: { n: 'Shieldbrothers', role: 'Core troops', pts: 85, ic: '⛨', M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 2,
-    models: [[3, ['arcCarbine'], ['combatBlade']], [1, ['fusionGun'], ['combatBlade']], [1, ['arcCarbine'], ['powerMaul']]] },
-  breachers: { n: 'Breacher Squad', role: 'Assault', pts: 80, ic: '⚔', M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 1,
-    models: [[5, ['scatterPistol'], ['chainblade']]], rule: { id: 'rerollCharge', n: 'Shock Assault', txt: 'May re-roll charge rolls.' } },
+  knightCaptain: { n: 'Knight-Captain', role: 'Leader', pts: 60, ic: '♛', M: 6, T: 4, Sv: 3, W: 5, Ld: 6, OC: 1, ward: 4,
+    models: [[1, ['arcPistol'], ['powerSword']]], rule: { id: 'rerollOnes', n: 'Lead from the Front', txt: 'Friendly units within 6" may re-roll hit rolls of 1.' },
+    lead: { id: 'ocBoost', n: 'Hold This Ground', txt: 'Every model in the unit gets +1 OC.' }, leads: ['shieldbrothers', 'breachers'],
+    opts: [{ id: 'gun', n: 'Ranged weapon', g: 0, f: 'guns', ch: [['arcPistol'], ['masterCarbine']] }, { id: 'mel', n: 'Melee weapon', g: 0, f: 'melee', ch: [['powerSword'], ['stormHammer']] }] },
+  oathkeeper: { n: 'Oathkeeper', role: 'Leader', pts: 55, ic: '✠', M: 6, T: 4, Sv: 3, W: 4, Ld: 6, OC: 1, ward: 4,
+    models: [[1, ['arcPistol'], ['oathMaul']]],
+    lead: { id: 'meleeWound', n: 'Litany of Wrath', txt: 'The unit adds 1 to wound rolls in melee.' }, leads: ['shieldbrothers', 'breachers'] },
+  shieldbrothers: { n: 'Shieldbrothers', role: 'Core troops', pts: 80, ic: '⛨', M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 2,
+    models: [[3, ['arcCarbine'], ['combatBlade']], [1, ['fusionGun'], ['combatBlade']], [1, ['arcCarbine'], ['powerMaul']]],
+    sizes: [{ n: 5, pts: 80 }, { n: 10, pts: 160 }],
+    opts: [{ id: 'spec', n: 'Special weapon', x2: 1, g: 1, f: 'guns', ch: [['fusionGun'], ['sunRifle'], ['arcCannon']] }, { id: 'sgt', n: 'Sergeant', g: 2, f: 'melee', ch: [['powerMaul'], ['powerSword'], ['chainblade']] }] },
+  breachers: { n: 'Breacher Squad', role: 'Assault', pts: 75, ic: '⚔', M: 6, T: 4, Sv: 3, W: 2, Ld: 6, OC: 1,
+    models: [[4, ['scatterPistol'], ['chainblade']], [1, ['scatterPistol'], ['chainblade']]], rule: { id: 'rerollCharge', n: 'Shock Assault', txt: 'May re-roll charge rolls.' },
+    sizes: [{ n: 5, pts: 75 }, { n: 10, pts: 150 }],
+    opts: [{ id: 'sgt', n: 'Sergeant', g: 1, f: 'melee', ch: [['chainblade'], ['powerSword'], ['stormHammer']] }] },
   talonRiders: { n: 'Talon Riders', role: 'Fast attack', pts: 80, ic: '➹', M: 12, T: 5, Sv: 3, W: 3, Ld: 6, OC: 2,
-    models: [[3, ['twinCarbine'], ['riderBlade']]] },
-  ironSentinel: { n: 'Iron Sentinel', role: 'Walker', pts: 130, ic: '♜', M: 5, T: 9, Sv: 3, W: 7, Ld: 6, OC: 3, vehicle: 1,
-    models: [[1, ['assaultCannon'], ['powerFist']]] },
+    models: [[3, ['twinCarbine'], ['riderBlade']]], sizes: [{ n: 3, pts: 80 }, { n: 6, pts: 160 }],
+    opts: [{ id: 'gun', n: 'Bike guns', g: 0, f: 'guns', ch: [['twinCarbine'], ['fusionLance']] }] },
+  ironSentinel: { n: 'Iron Sentinel', role: 'Walker', pts: 125, ic: '♜', M: 5, T: 9, Sv: 3, W: 7, Ld: 6, OC: 3, vehicle: 1,
+    models: [[1, ['assaultCannon'], ['powerFist']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['assaultCannon'], ['lanceCannon']] }] },
   /* ---------------- THE RUST TIDE ---------------- */
-  scrapking: { n: 'Scrapking', role: 'Leader', pts: 70, ic: '♚', M: 6, T: 5, Sv: 4, W: 6, Ld: 7, OC: 1, ward: 5,
-    models: [[1, ['rivetGun'], ['bigCleaver']]], rule: { id: 'chargeAura', n: 'Fury of the Tide', txt: 'Friendly units within 6" add 1 to charge rolls.' } },
-  rustbornMob: { n: 'Rustborn Mob', role: 'Core troops', pts: 80, ic: '☗', M: 6, T: 5, Sv: 5, W: 1, Ld: 7, OC: 2,
-    models: [[9, ['scrapPistol'], ['hacker']], [1, ['scrapPistol'], ['smasher']]] },
-  smogGunners: { n: 'Smog Gunners', role: 'Specialists', pts: 65, ic: '♨', M: 6, T: 5, Sv: 4, W: 1, Ld: 7, OC: 1,
-    models: [[5, ['smogThrower'], ['hacker']]] },
-  scrapRiders: { n: 'Scrap Riders', role: 'Fast attack', pts: 85, ic: '➶', M: 10, T: 6, Sv: 4, W: 4, Ld: 7, OC: 2,
-    models: [[3, ['twinRivets'], ['riderHook']]] },
+  scrapking: { n: 'Scrapking', role: 'Leader', pts: 65, ic: '♚', M: 6, T: 5, Sv: 4, W: 6, Ld: 7, OC: 1, ward: 5,
+    models: [[1, ['rivetGun'], ['bigCleaver']]], rule: { id: 'chargeAura', n: 'Fury of the Tide', txt: 'Friendly units within 6" add 1 to charge rolls.' },
+    lead: { id: 'chargeRR', n: 'Follow the Boss', txt: 'The unit can re-roll charge rolls.' }, leads: ['rustbornMob', 'smogGunners'],
+    opts: [{ id: 'gun', n: 'Ranged weapon', g: 0, f: 'guns', ch: [['rivetGun'], ['smogThrower']] }, { id: 'mel', n: 'Melee weapon', g: 0, f: 'melee', ch: [['bigCleaver'], ['wreckerClaw']] }] },
+  wrenchwright: { n: 'Wrenchwright', role: 'Leader', pts: 45, ic: '⚙', M: 6, T: 5, Sv: 4, W: 4, Ld: 7, OC: 1,
+    models: [[1, ['sparkWelder'], ['bigWrench']]],
+    lead: { id: 'saveUp', n: 'Bolted-On Plates', txt: 'The unit adds 1 to its armour saves (best 3+).' }, leads: ['rustbornMob', 'smogGunners'] },
+  rustbornMob: { n: 'Rustborn Mob', role: 'Core troops', pts: 80, ic: '☗', M: 6, T: 4, Sv: 5, W: 1, Ld: 7, OC: 2,
+    models: [[8, ['scrapPistol'], ['hacker']], [1, ['scrapPistol'], ['hacker']], [1, ['scrapPistol'], ['smasher']]],
+    sizes: [{ n: 10, pts: 80 }, { n: 20, pts: 150 }],
+    opts: [{ id: 'heavy', n: 'Mob gunner', x2: 1, g: 1, f: 'guns', ch: [['scrapPistol'], ['spikeLauncher']] }, { id: 'boss', n: 'Mob boss', g: 2, f: 'melee', ch: [['smasher'], ['wreckerClaw']] }] },
+  smogGunners: { n: 'Smog Gunners', role: 'Specialists', pts: 60, ic: '♨', M: 6, T: 5, Sv: 4, W: 1, Ld: 7, OC: 1,
+    models: [[5, ['smogThrower'], ['hacker']]], sizes: [{ n: 5, pts: 60 }, { n: 10, pts: 110 }] },
+  scrapRiders: { n: 'Scrap Riders', role: 'Fast attack', pts: 75, ic: '➶', M: 10, T: 6, Sv: 4, W: 4, Ld: 7, OC: 2,
+    models: [[3, ['twinRivets'], ['riderHook']]], sizes: [{ n: 3, pts: 75 }, { n: 6, pts: 150 }] },
   junkStomper: { n: 'Junk Stomper', role: 'Walker', pts: 125, ic: '♖', M: 6, T: 9, Sv: 3, W: 9, Ld: 7, OC: 3, vehicle: 1,
-    models: [[1, ['roarCannon'], ['crusher']]] }
+    models: [[1, ['roarCannon'], ['crusher']]], opts: [{ id: 'gun', n: 'Main gun', g: 0, f: 'guns', ch: [['roarCannon'], ['flameBelcher']] }] }
 };
+for (const [k, U] of Object.entries(UNITS)) { U.id = k; if (!U.sizes) U.sizes = [{ n: U.models.reduce((a, g) => a + g[0], 0), pts: U.pts }]; U.opts = U.opts || []; }
+
+/* Sub-factions: each army picks one, and its rule applies to the whole army. */
+const SUBS = {
+  covenant: {
+    anvil: { n: 'Order of the Anvil', tag: 'Hold the line', id: 'bulwark', rn: 'Iron Bulwark', txt: 'Enemy attacks against your units have their AP worsened by 1 (AP-1 becomes AP0).' },
+    flame: { n: 'Order of the Flame', tag: 'Close and kill', id: 'fervour', rn: 'Fervour', txt: 'Your melee weapons get an extra -1 AP, and your units add 1 to charge rolls.' },
+    hunt: { n: 'Order of the Hunt', tag: 'Gun them down', id: 'prey', rn: 'Marked Prey', txt: 'Your ranged attacks may re-roll hit rolls of 1 and wound rolls of 1.' }
+  },
+  rust: {
+    gut: { n: 'The Gutstompers', tag: 'Charge everything', id: 'stampede', rn: 'Stampede', txt: 'Your units add 1 to charge rolls (up to +2 with Fury of the Tide).' },
+    smog: { n: 'The Smogchoked', tag: 'Hide in the haze', id: 'haze', rn: 'Choking Smog', txt: 'Enemy ranged attacks from more than 18" away get -1 to hit.' },
+    heap: { n: 'The Scrapheap Crew', tag: 'Too stubborn to die', id: 'bodge', rn: 'Bodge Job', txt: 'Each time one of your models would lose a wound, roll a D6: on a 6 it is ignored.' }
+  }
+};
+const POINTS = [{ pts: 500, n: 'Skirmish', depth: 4, maxModels: 42 }, { pts: 750, n: 'Clash', depth: 5, maxModels: 55 }];
 
 const ARMIES = {
   covenant: { n: 'The Ironclad Covenant', short: 'Covenant', col: '#9cc2f0', dark: '#1f3a66', blurb: 'Gene-forged knights: few, elite and hard to kill.',
+    roster: ['knightCaptain', 'oathkeeper', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'],
     rule: { n: 'Oath of Iron', txt: 'Once per battle, each unit can re-roll all its failed hit rolls for one attack.' },
-    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'] },
+    list: ['knightCaptain', 'shieldbrothers', 'shieldbrothers', 'breachers', 'talonRiders', 'ironSentinel'], leadsInto: 1, sub: 'anvil' },
   rust: { n: 'The Rust Tide', short: 'Rust Tide', col: '#d0702c', dark: '#4f6b22', blurb: 'A scrap-built horde: cheap, many and brutal up close.',
+    roster: ['scrapking', 'wrenchwright', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'],
     rule: { n: 'Rusted Fury', txt: 'Units get +1 Strength in melee on a turn they charged.' },
-    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'] }
+    list: ['scrapking', 'rustbornMob', 'rustbornMob', 'smogGunners', 'scrapRiders', 'junkStomper'], leadsInto: 1, sub: 'gut' }
 };
 
 /* Battlefield: rotationally symmetric so both sides get the same ground. */
@@ -202,6 +283,176 @@ const TERRAIN = (() => {
   return t;
 })();
 const TERRAIN_INFO = { ruin: { n: 'Ruins', cover: 1, blocks: 1 }, crater: { n: 'Crater', cover: 1, blocks: 0 }, wall: { n: 'Barricade', cover: 1, blocks: 0 } };
+/* ============================================================================
+   IRON DOMINION: Muster. Army lists (points, squad sizes, wargear, leaders),
+   saved lists, random forces for the AI, and the army builder screens.
+   A list entry is { k: key, d: datasheet id, s: size index, o: { optionId: choice }, at: key of the unit a leader joins }
+   ============================================================================ */
+const newKey = () => Math.random().toString(36).slice(2, 9);
+const entryPts = e => UNITS[e.d].sizes[e.s || 0].pts;
+const entryModels = e => UNITS[e.d].sizes[e.s || 0].n;
+const listPts = L => L.units.reduce((a, e) => a + entryPts(e), 0);
+const listModels = L => L.units.reduce((a, e) => a + entryModels(e), 0);
+const armyOf = d => Object.keys(ARMIES).find(a => ARMIES[a].roster.includes(d));
+const maxOf = d => UNITS[d].role === 'Core troops' ? 6 : UNITS[d].role === 'Leader' ? 2 : 3;
+const sizeCfg = pts => POINTS.find(p => p.pts === pts) || POINTS[0];
+
+/* the models an entry fields: [[count, guns, melee], ...] after size and wargear */
+function buildModels(e) {
+  const U = UNITS[e.d];
+  const groups = U.models.map(([n, g, m]) => [n, g.slice(), m.slice()]);
+  for (const o of U.opts) if (o.x2 && e.s) groups[o.g][0] *= 2; // big squads get two special weapons
+  groups[0][0] += entryModels(e) - groups.reduce((a, g) => a + g[0], 0);
+  for (const o of U.opts) { const c = (e.o || {})[o.id] || 0; groups[o.g][o.f === 'guns' ? 1 : 2] = o.ch[c].slice(); }
+  return groups;
+}
+function starterList(army) {
+  const A = ARMIES[army], units = A.list.map(d => ({ k: newKey(), d, s: 0, o: {} }));
+  if (A.leadsInto != null) units[0].at = units[A.leadsInto].k;
+  return { id: 'starter-' + army, name: 'Starter force', army, sub: A.sub, pts: 500, units, builtIn: true };
+}
+/* problems that stop a list from being taken to battle */
+function listProblems(L) {
+  const P = [], pts = listPts(L), cfg = sizeCfg(L.pts), cnt = {};
+  if (!L.units.length) return ['Add some units'];
+  if (pts > L.pts) P.push(`${pts - L.pts} points over the ${L.pts} limit`);
+  if (!L.units.some(e => UNITS[e.d].role === 'Leader')) P.push('Needs at least one Leader to command it');
+  L.units.forEach(e => cnt[e.d] = (cnt[e.d] || 0) + 1);
+  for (const [d, n] of Object.entries(cnt)) if (n > maxOf(d)) P.push(`Too many ${UNITS[d].n} (max ${maxOf(d)})`);
+  const m = listModels(L); if (m > cfg.maxModels) P.push(`${m} models won't fit the deployment zone (max ${cfg.maxModels})`);
+  return P;
+}
+/* units a leader could join: the right datasheet, not already led */
+function bodyguards(L, le) {
+  return L.units.filter(e => UNITS[le.d].leads && UNITS[le.d].leads.includes(e.d) && !L.units.some(x => x !== le && x.at === e.k));
+}
+function tidyList(L) { const ks = new Set(L.units.map(e => e.k)); for (const e of L.units) if (e.at && (!ks.has(e.at) || !bodyguards(L, e).some(b => b.k === e.at))) delete e.at; }
+
+/* a random, legal force: used for the AI general and the "Random force" option */
+function randomList(army, pts) {
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const L = { id: 'random', name: 'Random force', army, sub: pick(Object.keys(SUBS[army])), pts, units: [] };
+  const roster = ARMIES[army].roster, cfg = sizeCfg(pts);
+  const fits = (d, s) => { const e = { d, s }; return listPts(L) + entryPts(e) <= pts && listModels(L) + entryModels(e) <= cfg.maxModels && L.units.filter(x => x.d === d).length < maxOf(d); };
+  const add = (d, s) => { const o = {}; UNITS[d].opts.forEach(op => o[op.id] = Math.random() < .5 ? 0 : Math.floor(Math.random() * op.ch.length)); L.units.push({ k: newKey(), d, s, o }); };
+  add(pick(roster.filter(d => UNITS[d].role === 'Leader')), 0);
+  const core = roster.find(d => UNITS[d].role === 'Core troops'); add(core, Math.random() < .3 && pts > 500 ? 1 : 0);
+  for (let guard = 0; guard < 40; guard++) {
+    const opts = [];
+    for (const d of roster) UNITS[d].sizes.forEach((_, s) => { if (!fits(d, s)) return; const w = UNITS[d].role === 'Leader' ? .5 : UNITS[d].role === 'Core troops' ? 2.5 : 2; opts.push([d, s, s ? w * .5 : w]); });
+    if (!opts.length) break;
+    let r = Math.random() * opts.reduce((a, x) => a + x[2], 0); const ch = opts.find(x => (r -= x[2]) <= 0) || opts[0];
+    add(ch[0], ch[1]);
+  }
+  for (const le of L.units.filter(e => UNITS[e.d].role === 'Leader')) { const bg = bodyguards(L, le); if (bg.length && Math.random() < .8) le.at = pick(bg).k; }
+  return L;
+}
+
+/* ---------- saved lists and the builder screens ---------- */
+const Muster = {
+  cur: null,
+  all() { return Store.get('lists', []); },
+  put(ls) { Store.set('lists', ls); },
+  get(id) { return this.all().find(L => L.id === id); },
+  L() { return this.get(this.cur); },
+  commit(L) { tidyList(L); const ls = this.all(), i = ls.findIndex(x => x.id === L.id); if (i >= 0) ls[i] = L; else ls.push(L); this.put(ls); this.draw(); },
+  col(army) { return ARMIES[army].col; },
+  /* the list of saved armies */
+  home() {
+    this.cur = null;
+    const ls = this.all();
+    Shell.screen(`<div class="mus">
+      <div class="mus-top"><button class="b" onclick="Shell.menu()">← Back</button><h2>Muster</h2><span></span></div>
+      <p class="tag">Build your armies: pick units, squad sizes and wargear, and attach your leaders. Lists save on your phone.</p>
+      ${ls.length ? ls.map(L => { const P = listProblems(L); return `<button class="lrow" onclick="Muster.edit('${L.id}')" style="--c:${this.col(L.army)}"><b>${esc(L.name)}</b><span>${ARMIES[L.army].short} · ${SUBS[L.army][L.sub].n} · ${listPts(L)}/${L.pts} pts</span>${P.length ? `<em>⚠ ${P[0]}</em>` : `<i>Ready for battle</i>`}</button>`; }).join('') : `<div class="empty">No army lists yet. The starter forces are always there when you play.</div>`}
+      <button class="tile big" onclick="Muster.create()"><span>＋</span>New army list</button></div>`);
+  },
+  async create() {
+    const army = await choose('Which army?', Object.values(ARMIES).map(a => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
+    if (!army) return;
+    const pts = await choose('Battle size', 'How many points can this army spend?', POINTS.map(p => ({ l: `${p.pts} pts · ${p.n}`, v: p.pts })).concat([{ l: 'Back', v: null }]));
+    if (!pts) return;
+    const sub = await this.pickSub(army); if (!sub) return;
+    const start = await choose('Start from', '', [{ l: 'An empty list', v: 'empty', p: 1 }, { l: 'The starter force', v: 'starter' }]);
+    const L = { id: newKey(), name: `${ARMIES[army].short} ${pts}`, army, sub, pts, units: [] };
+    if (start === 'starter') L.units = starterList(army).units;
+    this.cur = L.id; this.commit(L);
+  },
+  pickSub(army) {
+    return choose('Choose a sub-faction', 'Its rule applies to your whole army.', Object.entries(SUBS[army]).map(([k, x]) => ({ l: `<b>${x.n}</b><small>${x.tag}. ${x.rn}: ${x.txt}</small>`, v: k })).concat([{ l: 'Back', v: null }]));
+  },
+  edit(id) { this.cur = id; this.draw(); },
+  /* the list editor */
+  draw() {
+    const L = this.L(); if (!L) return this.home();
+    const pts = listPts(L), P = listProblems(L), sub = SUBS[L.army][L.sub], pct = Math.min(100, pts / L.pts * 100);
+    const leadOf = e => L.units.find(x => x.at === e.k), rows = [];
+    for (const e of L.units) {
+      if (e.at && L.units.some(x => x.k === e.at)) continue; // leaders show under their unit
+      const U = UNITS[e.d], le = leadOf(e);
+      rows.push(`<button class="urow" onclick="Muster.unit('${e.k}')"><span class="ic">${U.ic}</span><span class="nm"><b>${U.n}${U.sizes.length > 1 || entryModels(e) > 1 ? ` ×${entryModels(e)}` : ''}</b><small>${this.gearText(e) || U.role}</small></span><span class="pt">${entryPts(e)}</span></button>`);
+      if (le) rows.push(`<button class="urow led" onclick="Muster.unit('${le.k}')"><span class="ic">${UNITS[le.d].ic}</span><span class="nm"><b>${UNITS[le.d].n}</b><small>Leading the ${U.n}${this.gearText(le) ? ' · ' + this.gearText(le) : ''}</small></span><span class="pt">${entryPts(le)}</span></button>`);
+    }
+    Shell.screen(`<div class="mus">
+      <div class="mus-top"><button class="b" onclick="Muster.home()">← Lists</button><input class="lname" value="${esc(L.name)}" maxlength="28" onchange="Muster.rename(this.value)" aria-label="List name"><button class="b" onclick="Muster.more()">⋯</button></div>
+      <div class="lhead" style="--c:${this.col(L.army)}"><b>${ARMIES[L.army].n}</b><button class="chip" onclick="Muster.changeSub()">${sub.n} ▾</button>
+        <div class="sub-txt"><b>${sub.rn}:</b> ${sub.txt}</div>
+        <div class="bar"><div style="width:${pct}%;background:${pts > L.pts ? '#c0261c' : 'var(--c)'}"></div></div>
+        <div class="bar-l"><span>${pts} / ${L.pts} pts</span><span>${listModels(L)} models</span></div>
+        ${P.length ? `<div class="probs">${P.map(x => `<div>⚠ ${x}</div>`).join('')}</div>` : `<div class="okay">✔ Ready for battle</div>`}</div>
+      <div class="urows">${rows.join('') || '<div class="empty">No units yet.</div>'}</div>
+      <button class="tile" onclick="Muster.addSheet()"><span>＋</span>Add unit</button>
+      <button class="tile big" ${P.length ? 'disabled' : ''} onclick="Muster.battle()"><span>⚔</span>Battle with this list</button></div>`);
+  },
+  gearText(e) {
+    const U = UNITS[e.d], out = [];
+    for (const o of U.opts) { const c = (e.o || {})[o.id] || 0; if (c) out.push(o.ch[c].map(w => WEAPONS[w].n).join(' + ')); }
+    return out.join(', ');
+  },
+  rename(v) { const L = this.L(); L.name = v.trim().slice(0, 28) || 'My army'; this.commit(L); },
+  async changeSub() { const L = this.L(), s = await this.pickSub(L.army); if (s) { L.sub = s; this.commit(L); } },
+  async more() {
+    const L = this.L();
+    const v = await choose(esc(L.name), '', [{ l: '⧉ Duplicate list', v: 'dup' }, { l: '⇄ Change battle size', v: 'size' }, { l: '🗑 Delete list', v: 'del' }, { l: 'Back', v: null, p: 1 }]);
+    if (v === 'dup') { const c = JSON.parse(JSON.stringify(L)); c.id = newKey(); c.name = (L.name + ' copy').slice(0, 28); this.cur = c.id; this.commit(c); toast('List copied'); }
+    else if (v === 'size') { const p = await choose('Battle size', '', POINTS.map(p => ({ l: `${p.pts} pts · ${p.n}`, v: p.pts, p: p.pts === L.pts }))); if (p) { L.pts = p; this.commit(L); } }
+    else if (v === 'del') { const ok = await choose('Delete this list?', `"${esc(L.name)}" will be gone for good.`, [{ l: 'Delete', v: 1 }, { l: 'Keep', v: 0, p: 1 }]); if (ok) { this.put(this.all().filter(x => x.id !== L.id)); this.home(); } }
+  },
+  statLine(U) { return `M${U.M}" T${U.T} Sv${U.Sv}+ W${U.W} Ld${U.Ld}+ OC${U.OC}${U.ward ? ` · ward ${U.ward}+` : ''}`; },
+  addSheet() {
+    const L = this.L(), left = L.pts - listPts(L);
+    sheet(`<h2>Add a unit</h2><p class="small">${left} points left.</p><div class="dlist">${ARMIES[L.army].roster.map(d => {
+      const U = UNITS[d], n = L.units.filter(e => e.d === d).length, full = n >= maxOf(d), cheap = U.sizes[0].pts <= left;
+      return `<div class="ds"><div class="ds-h"><span class="ic">${U.ic}</span><b>${U.n}</b><span class="pt">${U.sizes.map(s => s.pts).join(' / ')} pts</span></div>
+        <div class="small">${U.role} · ${U.sizes.map(s => s.n).join(' or ')} model${U.sizes[0].n > 1 ? 's' : ''} · ${this.statLine(U)}</div>
+        ${U.rule ? `<div class="small rl">${U.rule.n}: ${U.rule.txt}</div>` : ''}${U.lead ? `<div class="small rl">Leading: ${U.lead.n}: ${U.lead.txt} Joins ${U.leads.map(x => UNITS[x].n).join(' or ')}.</div>` : ''}
+        <button class="b ${cheap && !full ? 'gold' : ''}" ${full ? 'disabled' : ''} onclick="Muster.add('${d}')">${full ? `Max ${maxOf(d)}` : cheap ? '＋ Add' : '＋ Add (over points)'}</button></div>`;
+    }).join('')}</div>`);
+  },
+  add(d) { const L = this.L(), e = { k: newKey(), d, s: 0, o: {} }; L.units.push(e); if (UNITS[d].lead) { const bg = bodyguards(L, e); if (bg.length) e.at = bg[0].k; } closeSheet(); this.commit(L); toast(`${UNITS[d].n} added`); },
+  unit(k) {
+    const L = this.L(), e = L.units.find(x => x.k === k); if (!e) return;
+    const U = UNITS[e.d], ws = {};
+    buildModels(e).forEach(([n, g, m]) => g.concat(m).forEach(w => ws[w] = (ws[w] || 0) + n));
+    const wl = Object.entries(ws).map(([w, n]) => { const x = WEAPONS[w]; return `<div class="wl"><b>${n > 1 ? n + '× ' : ''}${x.n}</b> <span>${x.r ? x.r + '"' : 'Melee'} · A${x.A} · ${x.kw.torrent ? 'auto' : x.sk + '+'} · S${x.S} · AP${x.AP} · D${x.D}${Object.keys(x.kw).length ? ' · ' + Object.keys(x.kw).join(', ') : ''}</span></div>`; }).join('');
+    const sizes = U.sizes.length > 1 ? `<div class="set"><span>Squad size</span><div class="seg">${U.sizes.map((s, i) => `<button class="b ${(e.s || 0) === i ? 'gold' : ''}" onclick="Muster.setSize('${k}',${i})">${s.n} · ${s.pts} pts</button>`).join('')}</div></div>` : '';
+    const opts = U.opts.map(o => `<label class="set"><span>${o.n}</span><select onchange="Muster.setOpt('${k}','${o.id}',+this.value)">${o.ch.map((c, i) => `<option value="${i}" ${((e.o || {})[o.id] || 0) === i ? 'selected' : ''}>${c.map(w => WEAPONS[w].n).join(' + ')}</option>`).join('')}</select></label>`).join('');
+    let lead = '';
+    if (U.lead) { const bg = bodyguards(L, e); lead = `<label class="set"><span>Leads</span><select onchange="Muster.setLead('${k}',this.value)"><option value="">Nobody (fights alone)</option>${bg.map(b => `<option value="${b.k}" ${e.at === b.k ? 'selected' : ''}>${UNITS[b.d].n} ×${entryModels(b)}</option>`).join('')}</select></label><p class="small">${U.lead.n}: ${U.lead.txt} The leader takes wounds last.</p>`; }
+    sheet(`<h2>${U.ic} ${U.n}</h2><p class="small">${U.role} · ${entryPts(e)} pts · ${this.statLine(U)}</p>${wl}
+      ${U.rule ? `<div class="rule"><b>${U.rule.n}:</b> ${U.rule.txt}</div>` : ''}${sizes}${opts}${lead}
+      ${U.opts.length ? `<p class="small">Wargear swaps are free: pick what suits your plan.${U.opts.some(o => o.x2) && U.sizes.length > 1 ? ' A full-size squad carries two special weapons.' : ''}</p>` : ''}
+      <div class="dlg-btns"><button class="b" onclick="Muster.dup('${k}')">⧉ Copy unit</button><button class="b danger" onclick="Muster.remove('${k}')">🗑 Remove</button></div>`);
+  },
+  edit1(k, fn) { const L = this.L(), e = L.units.find(x => x.k === k); if (!e) return; fn(e, L); this.commit(L); this.unit(k); },
+  setSize(k, i) { this.edit1(k, e => e.s = i); },
+  setOpt(k, id, i) { this.edit1(k, e => { e.o = e.o || {}; e.o[id] = i; }); },
+  setLead(k, t) { this.edit1(k, e => { if (t) e.at = t; else delete e.at; }); },
+  dup(k) { const L = this.L(), e = L.units.find(x => x.k === k); const c = JSON.parse(JSON.stringify(e)); c.k = newKey(); delete c.at; L.units.splice(L.units.indexOf(e) + 1, 0, c); closeSheet(); this.commit(L); toast('Unit copied'); },
+  remove(k) { const L = this.L(); L.units = L.units.filter(x => x.k !== k); closeSheet(); this.commit(L); },
+  async battle() { const L = this.L(); if (listProblems(L).length) return; Shell.play(L); }
+};
+function esc(t) { return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
 
 /* ============================================================================
    IRON DOMINION: rules engine (state, measuring, attacks) and the AI general
@@ -211,7 +462,7 @@ const WP = id => WEAPONS[id];
 const UD = u => UNITS[u.def];
 const d6 = () => 1 + Math.floor(Math.random() * 6);
 const rollExpr = e => typeof e === 'number' ? e : e === 'D3' ? Math.ceil(d6() / 2) : e === 'D6+1' ? d6() + 1 : e === '2D6' ? d6() + d6() : d6();
-const avgExpr = e => typeof e === 'number' ? e : e === 'D3' ? 2 : e === 'D6+1' ? 4.5 : 3.5;
+const avgExpr = e => typeof e === 'number' ? e : e === 'D3' ? 2 : e === 'D6+1' ? 4.5 : e === '2D6' ? 7 : 3.5;
 const key = (c, r) => c + ',' + r;
 const inBoard = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS;
 const enemyOf = s => 1 - s;
@@ -221,23 +472,47 @@ const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const sqd = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 let NEXT_ID = 1;
 const nd = n => n === 1 ? '1 die' : n + ' dice';
+const MW = m => UNITS[m.p].W;
+const unitM = u => Math.min(...u.models.map(m => UNITS[m.p].M));
+const unitLd = u => Math.min(...u.models.map(m => UNITS[m.p].Ld));
+const hasRule = (u, id) => u.models.some(m => UNITS[m.p].rule && UNITS[m.p].rule.id === id);
+const leadIs = (u, id) => !!(u.lead && UNITS[u.lead].lead && UNITS[u.lead].lead.id === id);
+const subOf = s => { const p = G.players[s], L = p.list; return L && SUBS[p.army] && SUBS[p.army][L.sub] || null; };
+const subIs = (s, id) => { const x = subOf(s); return !!(x && x.id === id); };
+const modelOC = (u, m) => UNITS[m.p].OC + (leadIs(u, 'ocBoost') ? 1 : 0);
+const unitOC = u => u.models.reduce((a, m) => a + modelOC(u, m), 0);
 
 /* ---------- building armies ---------- */
-function makeUnit(def, side) {
-  const D = UNITS[def], models = [];
-  D.models.forEach(([n, guns, melee], gi) => { for (let k = 0; k < n; k++) models.push({ id: NEXT_ID++, x: -1, y: -1, w: D.W, guns: guns.slice(), melee: melee.slice(), spec: gi > 0 }); });
-  return { uid: NEXT_ID++, def, side, models, startN: models.length, moved: false, advanced: false, fellBack: false, shot: false, charged: false, fought: false, shaken: false, oath: false };
+function makeUnit(e, side, leaders = []) {
+  if (typeof e === 'string') e = { d: e, s: 0, o: {} };
+  const D = UNITS[e.d], models = [];
+  const add = (le, isLdr) => buildModels(le).forEach(([n, guns, melee], gi) => { for (let k = 0; k < n; k++) models.push({ id: NEXT_ID++, x: -1, y: -1, p: le.d, w: UNITS[le.d].W, guns: guns.slice(), melee: melee.slice(), spec: isLdr || gi > 0, ldr: isLdr }); });
+  add(e, false); let pts = entryPts(e), lead = null;
+  for (const le of leaders) { add(le, true); lead = le.d; pts += entryPts(le); }
+  return { uid: NEXT_ID++, def: e.d, lead, side, models, startN: models.length, pts, wStart: models.reduce((a, m) => a + m.w, 0), moved: false, advanced: false, fellBack: false, shot: false, charged: false, fought: false, shaken: false, oath: false };
 }
 function newBattle(cfg) {
-  NEXT_ID = 1;
+  NEXT_ID = 1; cfg.pts = cfg.pts || 500;
   G = { cfg, round: 1, turn: 0, phase: 'command', cp: [0, 0], vp: [0, 0], players: cfg.players, units: [], log: [], over: null, first: 0, cmdUsed: [false, false], score: [[], []] };
-  cfg.players.forEach((p, s) => ARMIES[p.army].list.forEach(def => G.units.push(makeUnit(def, s))));
+  cfg.players.forEach((p, s) => {
+    const L = p.list = p.list || starterList(p.army);
+    const ks = new Set(L.units.map(e => e.k)), leaders = L.units.filter(e => e.at && ks.has(e.at));
+    L.units.forEach(e => { if (!leaders.includes(e)) G.units.push(makeUnit(e, s, leaders.filter(l => l.at === e.k))); });
+  });
+  cfg.players.forEach((p, s) => { const x = subOf(s); log(`${p.name}: ${p.list.name}, ${x ? x.n : ARMIES[p.army].short} (${listPts(p.list)} pts).`); });
   deploy(0); deploy(1);
   G.first = G.turn = Math.random() < .5 ? 0 : 1;
-  log(`${pname(G.first)} wins the roll-off and takes the first turn.`);
+  log(`${pverb(G.first, 'wins', 'win')} the roll-off and takes the first turn.`);
   return G;
 }
+/* saves from v0.1 had no per-model profiles */
+function migrate(state) {
+  for (const u of state.units) { for (const m of u.models) if (!m.p) m.p = u.def; if (u.pts == null) { u.pts = UNITS[u.def].pts; u.wStart = u.startN * UNITS[u.def].W; } }
+  if (!state.cfg.pts) state.cfg.pts = 500;
+  return state;
+}
 const pname = s => G.players[s].name;
+const pverb = (s, one, you) => `${pname(s)} ${pname(s) === 'You' ? you : one}`;
 function log(t) { G.log.push(t); if (G.log.length > 60) G.log.shift(); }
 
 /* ---------- the grid ---------- */
@@ -263,10 +538,19 @@ function formation(u, anchor, ok) {
   return true;
 }
 function deploy(side) {
-  const us = G.units.filter(u => u.side === side), slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2]];
+  const depth = (POINTS.find(p => p.pts === G.cfg.pts) || POINTS[0]).depth;
+  const zone = d => (x, y) => side === 1 ? y <= d - 1 : y >= ROWS - d;
+  const us = G.units.filter(u => u.side === side);
+  const slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2], [3, 3], [11, 3]];
+  const all = []; for (let r = 0; r < depth + 1; r++) for (let c = 0; c < COLS; c++) all.push([c, r]);
+  all.sort((a, b) => Math.abs(a[0] - 7) - Math.abs(b[0] - 7) + (b[1] - a[1]) * .3);
   us.forEach((u, i) => {
-    let [c, r] = slots[i % slots.length]; if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; }
-    formation(u, { x: c, y: r }, (x, y) => side === 1 ? y <= 3 : y >= ROWS - 4);
+    const cands = [slots[i % slots.length]].concat(all);
+    let ok = false;
+    for (const d of [depth, depth + 1, depth + 2]) {
+      for (let [c, r] of cands) { if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; } if (formation(u, { x: c, y: r }, zone(d))) { ok = true; break; } }
+      if (ok) break;
+    }
   });
 }
 function engagedWith(u) { const out = new Set(); for (const v of liveUnits()) if (v.side !== u.side) for (const a of u.models) for (const b of v.models) if (cheb(a, b) <= 1) out.add(v); return [...out]; }
@@ -293,7 +577,7 @@ const stationary = u => !u.moved;
 function objControl() {
   return OBJECTIVES.map(([c, r]) => {
     const oc = [0, 0];
-    for (const u of liveUnits()) { if (u.shaken) continue; for (const m of u.models) if (Math.hypot(m.x - c, m.y - r) <= 1.6) oc[u.side] += UD(u).OC; }
+    for (const u of liveUnits()) { if (u.shaken) continue; for (const m of u.models) if (Math.hypot(m.x - c, m.y - r) <= 1.6) oc[u.side] += modelOC(u, m); }
     return oc[0] > oc[1] ? 0 : oc[1] > oc[0] ? 1 : -1;
   });
 }
@@ -307,7 +591,21 @@ function scoreTurn(side) {
 
 /* ---------- attack maths ---------- */
 function woundNeed(S, T) { return S >= 2 * T ? 2 : S > T ? 3 : S === T ? 4 : S * 2 <= T ? 6 : 5; }
-function saveNeed(def, AP, cover) { const D = UD(def); let sv = D.Sv - AP - (cover ? 1 : 0); sv = Math.max(2, sv); if (D.ward && D.ward < sv) sv = D.ward; return sv; }
+function saveNeed(def, AP, cover) {
+  const D = UD(def); if (AP < 0 && subIs(def.side, 'bulwark')) AP++;
+  let sv = Math.max(2, D.Sv - AP - (cover ? 1 : 0)); if (leadIs(def, 'saveUp') && sv > 3) sv--;
+  if (D.ward && D.ward < sv) sv = D.ward; return sv;
+}
+/* everything that tweaks one weapon's attack: Strength, wound roll, AP and the hit roll */
+function atkMods(att, def, w, melee, g) {
+  const rust = melee && att.chargedNow && G.players[att.side].army === 'rust';
+  const S = w.S + (rust ? 1 : 0) + (melee && leadIs(att, 'meleeStr') ? 1 : 0);
+  const wn = Math.max(2, woundNeed(S, UD(def).T) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
+  const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0);
+  const heavy = !melee && w.kw.heavy && stationary(att), haze = !melee && g && g.far && subIs(def.side, 'haze');
+  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0)) + (haze ? 1 : 0));
+  return { S, wn, AP, need, heavy, haze };
+}
 /* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
 function shootingGroups(att, def) {
   const groups = {}, moved = att.advanced;
@@ -316,72 +614,79 @@ function shootingGroups(att, def) {
     let best = 1e9, seen = false;
     for (const t of def.models) { const d = sqd(m, t) * SQ; if (d <= w.r && los(m, t)) { seen = true; best = Math.min(best, d); } }
     if (!seen) continue;
-    const g = groups[wid] = groups[wid] || { wid, models: 0, half: true };
-    g.models++; if (best > w.r / 2) g.half = false;
+    const g = groups[wid] = groups[wid] || { wid, models: 0, half: true, far: true };
+    g.models++; if (best > w.r / 2) g.half = false; if (best <= 18) g.far = false;
   }
   return Object.values(groups);
 }
-function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true }; g[wid].models++; } return Object.values(g); }
+function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true, far: false }; g[wid].models++; } return Object.values(g); }
 function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
 function canCharge(u) { return u.models.length && !u.advanced && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
-function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (UD(v).rule && UD(v).rule.id === 'chargeAura' && v !== u && unitDistIn(u, v) <= 6) b = 1; if (UD(u).rule && UD(u).rule.id === 'chargeAura') b = 1; return b; }
+function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b); }
 const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
-function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (UD(v).rule && UD(v).rule.id === 'rerollOnes' && unitDistIn(u, v) <= 6) return true; return false; }
+function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rerollOnes') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 /* expected damage (for the AI and the hint line) */
 function expected(att, def, melee) {
   const groups = melee ? meleeGroups(att) : shootingGroups(att, def); let dmg = 0;
-  const T = UD(def).T, cover = !melee && inCover(def, att), Wt = UD(def).W;
+  const cover = !melee && inCover(def, att), Wt = UD(def).W;
   for (const g of groups) {
-    const w = WP(g.wid); let A = avgExpr(w.A) * g.models; if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
-    const S = w.S + (melee && att.chargedNow && att.side !== undefined && G.players[att.side].army === 'rust' ? 1 : 0);
-    const pH = w.kw.torrent ? 1 : Math.min(5 / 6, Math.max(1 / 6, (7 - Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0))) / 6));
-    let pW = (7 - woundNeed(S, T)) / 6; if (w.kw.twin) pW = 1 - (1 - pW) * (1 - pW);
-    const sv = saveNeed(def, w.AP, cover), pF = sv >= 7 ? 1 : (sv - 1) / 6;
+    const w = WP(g.wid), M = atkMods(att, def, w, melee, g); let A = avgExpr(w.A) * g.models; if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
+    const pH = w.kw.torrent ? 1 : (7 - M.need) / 6;
+    let pW = (7 - M.wn) / 6; if (w.kw.twin) pW = 1 - (1 - pW) * (1 - pW);
+    const sv = saveNeed(def, M.AP, cover), pF = sv >= 7 ? 1 : (sv - 1) / 6;
     let D = avgExpr(w.D) + (w.kw.melta && g.half ? w.kw.melta : 0); D = Math.min(D, Wt);
     dmg += A * pH * pW * pF * D;
   }
+  if (subIs(def.side, 'bodge')) dmg *= 5 / 6;
   return dmg;
 }
 
 /* ---------- resolving an attack (dice go through the Tray) ---------- */
 async function resolveAttack(att, def, melee) {
   const groups = melee ? meleeGroups(att) : shootingGroups(att, def), cover = !melee && inCover(def, att);
-  const T = UD(def).T, rustFury = melee && att.chargedNow && G.players[att.side].army === 'rust';
   let killed = 0;
   for (const g of groups) {
     if (!def.models.length) break;
     const w = WP(g.wid);
     let A = 0; for (let k = 0; k < g.models; k++) A += rollExpr(w.A); if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
-    const S = w.S + (rustFury ? 1 : 0), head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
+    const M = atkMods(att, def, w, melee, g), S = M.S, T = UD(def).T, head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
     // hit
     let hits;
     if (w.kw.torrent) { hits = A; await Tray.note(head, `${A} automatic hit${A === 1 ? '' : 's'} (torrent).`); }
     else {
-      const need = Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0));
-      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${w.kw.heavy && stationary(att) ? ' (heavy, stood still)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
+      const need = M.need;
+      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${M.heavy ? ' (heavy, stood still)' : ''}${M.haze ? ' (−1: choking smog)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att) || (!melee && subIs(att.side, 'prey')), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
       hits = dice.filter(v => v >= need).length;
     }
     if (!hits) { log(`${head}: no hits.`); continue; }
     // wound
-    const wn = woundNeed(S, T);
-    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin });
+    const wn = M.wn, prey = !melee && subIs(att.side, 'prey');
+    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : prey ? ' (marked prey: re-roll 1s)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin, rrOnes: prey });
     const wounds = wd.filter(v => v >= wn).length;
     if (!wounds) { log(`${head}: ${hits} hit${hits > 1 ? 's' : ''}, no wounds.`); continue; }
     // save (the defender rolls)
-    const sv = saveNeed(def, w.AP, cover);
+    const sv = saveNeed(def, M.AP, cover);
     let fails = wounds;
     if (sv <= 6) {
       const sd = await Tray.step({ kind: 'save', title: `${UD(def).n} save`, label: `Roll saves: ${nd(wounds)}, ${sv}+ to save${cover ? ' (in cover)' : ''}${UD(def).ward && UD(def).ward === sv ? ' (ward)' : ''}`, n: wounds, need: sv, side: def.side });
       fails = sd.filter(v => v < sv).length;
-    } else await Tray.note(`${UD(def).n} save`, `No save possible against AP${w.AP}.`);
+    } else await Tray.note(`${UD(def).n} save`, `No save possible against AP${M.AP}.`);
     if (!fails) { log(`${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, all saved.`); continue; }
     // damage
     let dmgs = [];
     if (typeof w.D === 'number') dmgs = Array(fails).fill(w.D);
     else { const dd = await Tray.step({ kind: 'damage', title: head, label: `Roll damage: ${fails} × ${w.D}`, n: fails, need: 0, side: att.side, plain: true }); dmgs = dd.map(v => w.D === 'D3' ? Math.ceil(v / 2) : w.D === 'D6+1' ? v + 1 : v); }
     if (w.kw.melta && g.half) dmgs = dmgs.map(d => d + w.kw.melta);
+    if (subIs(def.side, 'bodge')) {
+      dmgs = dmgs.map(d => Math.min(d, UD(def).W)); const tot = dmgs.reduce((a, b) => a + b, 0);
+      const fd = await Tray.step({ kind: 'fnp', title: `${UD(def).n}: Bodge Job`, label: `Roll for each lost wound: ${nd(tot)}, a 6 ignores it`, n: tot, need: 6, side: def.side });
+      let saved = fd.filter(v => v >= 6).length;
+      for (let i = 0; i < dmgs.length && saved; i++) { const t = Math.min(saved, dmgs[i]); dmgs[i] -= t; saved -= t; }
+      dmgs = dmgs.filter(d => d > 0);
+      if (!dmgs.length) { log(`${head}: every wound shrugged off.`); await Tray.result(`${UD(def).n} bodges it back together: no models lost.`, def); continue; }
+    }
     const before = def.models.length;
     for (const d of dmgs) { if (!def.models.length) break; allocate(def, d); }
     killed += before - def.models.length;
@@ -393,9 +698,14 @@ async function resolveAttack(att, def, melee) {
   return killed;
 }
 function allocate(def, dmg) {
-  // wounded models take damage first, then plain models, specialists last
-  let m = def.models.find(x => x.w < UD(def).W) || def.models.filter(x => !x.spec).slice(-1)[0] || def.models[def.models.length - 1];
-  m.w -= dmg; if (m.w <= 0) def.models.splice(def.models.indexOf(m), 1);
+  // wounded models take damage first, then plain models, specialists, and an attached leader last
+  const ms = def.models, body = ms.filter(x => !x.ldr);
+  const m = body.find(x => x.w < MW(x)) || body.filter(x => !x.spec).slice(-1)[0] || body.slice(-1)[0] || ms.find(x => x.w < MW(x)) || ms[ms.length - 1];
+  m.w -= dmg; if (m.w <= 0) ms.splice(ms.indexOf(m), 1);
+  if (ms.length && !ms.some(x => !x.ldr)) { // the bodyguard is gone: the leader fights on alone
+    log(`${UD(def).n} falls. ${UNITS[def.lead].n} fights on alone.`);
+    def.def = def.lead; def.lead = null; def.startN = ms.length; ms.forEach(x => { x.ldr = false; x.spec = false; });
+  }
 }
 function checkWipe() {
   if (G.over) return;
@@ -405,7 +715,7 @@ function checkWipe() {
 
 /* ---------- moving ---------- */
 function reachable(u, mode, adv = 0) {
-  const a = u.models[0], range = (UD(u).M + adv) / SQ, occ = occMap(), out = new Set();
+  const a = u.models[0], range = (unitM(u) + adv) / SQ, occ = occMap(), out = new Set();
   for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
     if (Math.hypot(c - a.x, r - a.y) > range + .01) continue;
     const h = occ[key(c, r)]; if (h && h.u !== u) continue;
@@ -440,7 +750,7 @@ const AI = {
   isMelee(u) { const fake = { models: [{ x: 0, y: 0 }] }; let m = 0, r = 0; for (const g of meleeGroups(u)) { const w = WP(g.wid); m += avgExpr(w.A) * g.models * w.S * avgExpr(w.D); } for (const md of u.models) for (const wid of md.guns) { const w = WP(wid); r += avgExpr(w.A) * w.S * avgExpr(w.D) * (w.kw.torrent ? 1.5 : 1); } return m > r * 1.3; },
   maxRange(u) { let r = 0; for (const m of u.models) for (const wid of m.guns) r = Math.max(r, WP(wid).r); return r; },
   cellScore(u, c, r, side) {
-    const ctl = objControl(), melee = AI.isMelee(u), oc = UD(u).OC * u.models.length;
+    const ctl = objControl(), melee = AI.isMelee(u), oc = unitOC(u);
     let s = 0;
     OBJECTIVES.forEach(([oc0, or0], i) => {
       const d = Math.hypot(c - oc0, r - or0);
@@ -462,9 +772,8 @@ const AI = {
   pickShot(u) {
     let best = null;
     for (const v of shootTargets(u)) {
-      let s = expected(u, v, false); const left = v.models.reduce((a, m) => a + m.w, 0);
-      s *= UD(v).pts / (UD(v).W * v.startN);
-      if (s * 1.2 >= left * UD(v).pts / (UD(v).W * v.startN)) s += 3;
+      let s = expected(u, v, false); const left = v.models.reduce((a, m) => a + m.w, 0), val = v.pts / v.wStart;
+      s *= val; if (s * 1.2 >= left * val) s += 3;
       if (objControl().some((x, i) => x !== u.side && v.models.some(m => Math.hypot(m.x - OBJECTIVES[i][0], m.y - OBJECTIVES[i][1]) <= 1.6))) s *= 1.4;
       s += AI.noise() * .3;
       if (!best || s > best.s) best = { v, s };
@@ -475,7 +784,7 @@ const AI = {
   pickCharge(u) {
     let best = null;
     for (const v of chargeTargets(u)) {
-      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), UD(u).rule && UD(u).rule.id === 'rerollCharge');
+      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR'));
       const gain = expected(u, v, true) - expected(v, u, true) * .5;
       const s = p * gain + (AI.isMelee(u) ? 1.5 : -1) + AI.noise() * .2;
       if (p > .25 && (!best || s > best.s)) best = { v, s };
@@ -507,7 +816,7 @@ const Tray = {
   close() { if (this.el) this.el.classList.remove('on'); },
   autoPolicy(o, d) { // rerolls the AI (or quick dice) takes on its own
     const fail = v => o.need ? v < o.need : false;
-    if (o.kind === 'save') return d;
+    if (o.kind === 'save' || o.kind === 'fnp') return d;
     if (o.rrFails) d = d.map(v => fail(v) ? d6() : v);
     else if (o.rrOnes) d = d.map(v => v === 1 ? d6() : v);
     if (o.oath && d.filter(fail).length > d.length / 2) { o.oath.oath = true; d = d.map(v => fail(v) ? d6() : v); }
@@ -534,7 +843,7 @@ const Tray = {
     const html = d.map(v => this.die(v, o.sum || o.plain ? '' : this.ok(o, v) ? 'good' : 'bad')).join('');
     this.el.querySelector('.dice').classList.remove('rolling'); this.el.querySelector('.dice').innerHTML = html;
     if (o.sum) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', this.sumLine(o, d));
-    else if (!o.plain) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', `<div class="tray-sum">${d.filter(v => this.ok(o, v)).length} of ${d.length} ${o.kind === 'save' ? 'saved' : 'succeed'}</div>`);
+    else if (!o.plain) this.el.querySelector('.tray-in').insertAdjacentHTML('beforeend', `<div class="tray-sum">${d.filter(v => this.ok(o, v)).length} of ${d.length} ${o.kind === 'save' ? 'saved' : o.kind === 'fnp' ? 'ignored' : 'succeed'}</div>`);
     await this.waitTap(Settings.fast ? 700 : 1500);
   },
   async tumble(d) { const box = this.el.querySelector('.dice'); for (let k = 0; k < 6; k++) { box.innerHTML = d.map(() => this.die(d6())).join(''); await sleep(55); } },
@@ -553,11 +862,11 @@ const Tray = {
           if (o.sum && o.rrAll && !usedFails) btns.push(`<button class="b" data-a="all">↻ Re-roll the charge</button>`);
           if (!cmdUsed && G.cp[o.side] >= 1) btns.push(`<button class="b ${picking ? 'gold' : ''}" data-a="cmd">${picking ? 'Tap a die to re-roll' : '✦ Command re-roll (1 CP)'}</button>`);
           if (o.sum || o.plain) btns.push(`<button class="b gold" data-a="done">Continue →</button>`);
-          else btns.push(`<button class="b gold" data-a="sweep">${o.kind === 'save' ? '🧹 Clear saved dice' : '🧹 Sweep away misses'}</button>`);
+          else btns.push(`<button class="b gold" data-a="sweep">${o.kind === 'save' ? '🧹 Clear saved dice' : o.kind === 'fnp' ? '🧹 Sweep away failed rolls' : '🧹 Sweep away misses'}</button>`);
         } else btns.push(`<button class="b gold big" data-a="done">Continue →</button>`);
         const shown = d.map((v, i) => [v, i]).filter(([v]) => !swept || (o.kind === 'save' ? !this.ok(o, v) : this.ok(o, v)));
         const n = shown.length;
-        const after = swept ? `<div class="tray-sum ${n ? 'good' : 'bad'}">${o.kind === 'save' ? `${n} unsaved` : `${n} ${o.kind === 'hit' ? 'hit' : 'wound'}${n === 1 ? '' : 's'}`}</div>` : '';
+        const after = swept ? `<div class="tray-sum ${n ? 'good' : 'bad'}">${o.kind === 'save' ? `${n} unsaved` : o.kind === 'fnp' ? `${n} ignored` : `${n} ${o.kind === 'hit' ? 'hit' : 'wound'}${n === 1 ? '' : 's'}`}</div>` : '';
         this.open(`<div class="tray-title">${o.title}</div><div class="tray-label">${G.players[o.side].name} · ${o.label}</div>
           <div class="dice ${picking ? 'picking' : ''}">${shown.map(([v, i]) => rolled ? this.die(v, o.sum || o.plain ? '' : fail(v) ? 'bad' : 'good', i) : this.die(0, 'blank', i)).join('')}</div>
           ${rolled && o.sum ? this.sumLine(o, d) : ''}${after}<div class="tray-btns">${btns.join('')}</div>`);
@@ -586,7 +895,7 @@ const Tray = {
 const Battle = {
   root: null, ui: { sel: null, mode: null, reach: null, targets: null }, endPhase: null, sid: 0,
   start(cfg) { newBattle(cfg); this.sid++; this.ui = {}; Tray.close(); this.render(); this.loop(this.sid); },
-  resume(state) { G = state; NEXT_ID = Math.max(...G.units.flatMap(u => [u.uid, ...u.models.map(m => m.id)])) + 1; this.sid++; this.ui = {}; this.render(); this.loop(this.sid, true); },
+  resume(state) { G = migrate(state); NEXT_ID = Math.max(...G.units.flatMap(u => [u.uid, ...u.models.map(m => m.id)])) + 1; this.sid++; this.ui = {}; this.render(); this.loop(this.sid, true); },
   alive(my) { if (my !== this.sid) throw 'abort'; },
   async loop(my, resumed) {
     try {
@@ -594,7 +903,7 @@ const Battle = {
       while (!G.over) {
         await this.playerTurn(G.turn, my, skipStart); skipStart = false; this.alive(my);
         if (G.over) break;
-        const vp = scoreTurn(G.turn); if (vp) { log(`${pname(G.turn)} scores ${vp} VP from objectives.`); toast(`${pname(G.turn)} scores ${vp} VP`); }
+        const vp = scoreTurn(G.turn); if (vp) { log(`${pverb(G.turn, 'scores', 'score')} ${vp} VP from objectives.`); toast(`${pverb(G.turn, 'scores', 'score')} ${vp} VP`); }
         if (G.turn !== G.first) { if (G.round >= 5) { G.over = { winner: G.vp[0] > G.vp[1] ? 0 : G.vp[1] > G.vp[0] ? 1 : -1, why: 'vp' }; break; } G.round++; }
         G.turn = enemyOf(G.turn); this.render();
       }
@@ -609,10 +918,10 @@ const Battle = {
       this.banner(`Round ${G.round} · ${pname(s)}`, 'Command phase'); this.render(); await sleep(Settings.fast ? 300 : 700); this.alive(my);
       for (const u of unitsOf(s)) {
         u.shaken = false;
-        const D = UD(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= D.W;
+        const D = UD(u), Ld = unitLd(u), below = u.startN > 1 ? u.models.length * 2 < u.startN : u.models[0].w * 2 <= MW(u.models[0]);
         if (!below) continue;
-        const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${D.Ld}+`, n: 2, need: D.Ld, side: s }); this.alive(my);
-        const t = d[0] + d[1]; if (t < D.Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
+        const d = await Tray.step({ kind: 'test', sum: true, title: `${D.n}: battle-shock test`, label: `Below half strength. Roll 2D6, needs ${Ld}+`, n: 2, need: Ld, side: s }); this.alive(my);
+        const t = d[0] + d[1]; if (t < Ld) { u.shaken = true; log(`${D.n} is shaken (rolled ${t}).`); } else log(`${D.n} holds firm (rolled ${t}).`);
       }
       Tray.close();
     }
@@ -635,7 +944,7 @@ const Battle = {
     for (const u of unitsOf(s)) {
       if (engaged(u)) { if (!AI.isMelee(u) && expected(engagedWith(u)[0], u, true) > expected(u, engagedWith(u)[0], true)) { const b = AI.bestMove(u, 0); if (b) { moveUnit(u, b.c, b.r); u.fellBack = true; u.moved = true; log(`${UD(u).n} falls back.`); await pause(500); } } continue; }
       let adv = 0;
-      if (AI.isMelee(u)) { const near = Math.min(...unitsOf(enemyOf(s)).map(v => unitDistIn(u, v))); if (near > UD(u).M + 9) { adv = d6(); u.advanced = true; } }
+      if (AI.isMelee(u)) { const near = Math.min(...unitsOf(enemyOf(s)).map(v => unitDistIn(u, v))); if (near > unitM(u) + 9) { adv = d6(); u.advanced = true; } }
       const b = AI.bestMove(u, adv);
       if (b && (b.c !== u.models[0].x || b.r !== u.models[0].y)) { moveUnit(u, b.c, b.r); u.moved = true; if (adv) log(`${UD(u).n} advances ${adv}".`); this.ui.flash = u.uid; await pause(450); }
     }
@@ -648,7 +957,7 @@ const Battle = {
   },
   async doCharge(u, v, my) {
     const need = chargeNeed(u, v), bonus = chargeBonus(u);
-    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +1' : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: !!(UD(u).rule && UD(u).rule.id === 'rerollCharge') });
+    const d = await Tray.step({ kind: 'charge', sum: true, title: `${UD(u).n} charges ${UD(v).n}!`, label: `Roll 2D6${bonus ? ' +' + bonus : ''}, needs ${need}" to reach`, n: 2, need, bonus, side: u.side, rrAll: hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR') });
     this.alive(my); Tray.close();
     u.charged = true;
     const roll = d[0] + d[1] + bonus;
@@ -735,7 +1044,7 @@ const Battle = {
     const objs = OBJECTIVES.map(([c, r], i) => `<div class="obj" style="left:${(c - 1.1) * cell}px;top:${(r - 1.1) * cell}px;width:${cell * 3.2}px;height:${cell * 3.2}px;border-color:${ctl[i] >= 0 ? col(ctl[i]) : 'rgba(255,255,255,.35)'};background:${ctl[i] >= 0 ? col(ctl[i]) + '22' : 'transparent'}"><span style="background:${ctl[i] >= 0 ? col(ctl[i]) : '#777'}">${i + 1}</span></div>`).join('');
     const models = liveUnits().map(u => {
       const D = UD(u), sel = ui.sel === u.uid, tgt = ui.targets && ui.targets.has(u.uid), aim = ui.aim === u.uid, view = ui.view === u.uid, fl = ui.flash === u.uid;
-      return u.models.map((m, i) => `<div class="mdl ${D.vehicle ? 'veh' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${aim ? 'aim' : ''} ${view && !sel ? 'view' : ''} ${fl ? 'fl' : ''} ${u.shaken ? 'shk' : ''}" style="left:${m.x * cell + cell * .08}px;top:${m.y * cell + cell * .08}px;width:${cell * .84}px;height:${cell * .84}px;background:radial-gradient(circle at 35% 30%,${col(u.side)},${dark(u.side)});font-size:${cell * .48}px">${i === 0 || D.vehicle ? D.ic : ''}${m.w < D.W ? `<i class="wd">${m.w}</i>` : ''}</div>`).join('');
+      return u.models.map((m, i) => `<div class="mdl ${D.vehicle ? 'veh' : ''} ${m.ldr ? 'ldr' : ''} ${sel ? 'sel' : ''} ${tgt ? 'tgt' : ''} ${aim ? 'aim' : ''} ${view && !sel ? 'view' : ''} ${fl ? 'fl' : ''} ${u.shaken ? 'shk' : ''}" style="left:${m.x * cell + cell * .08}px;top:${m.y * cell + cell * .08}px;width:${cell * .84}px;height:${cell * .84}px;background:radial-gradient(circle at 35% 30%,${col(u.side)},${dark(u.side)});font-size:${cell * .48}px">${m.ldr ? UNITS[m.p].ic : i === 0 || D.vehicle ? D.ic : ''}${m.w < MW(m) ? `<i class="wd">${m.w}</i>` : ''}</div>`).join('');
     }).join('');
     const s = this.mySide(), u = this.unit(ui.sel), vu = this.unit(ui.view || ui.sel);
     root.innerHTML = `
@@ -756,15 +1065,15 @@ const Battle = {
     u.models.forEach(m => m.guns.concat(m.melee).forEach(w => ws[w] = (ws[w] || 0) + 1));
     const wl = Object.entries(ws).map(([w, n]) => { const x = WP(w); return `<div class="wl"><b>${n > 1 ? n + '× ' : ''}${x.n}</b> <span>${x.r ? x.r + '"' : 'Melee'} · A${x.A} · ${x.kw.torrent ? 'auto' : x.sk + '+'} · S${x.S} · AP${x.AP} · D${x.D}${Object.keys(x.kw).length ? ' · ' + Object.keys(x.kw).join(', ') : ''}</span></div>`; }).join('');
     const flags = [u.shaken && 'Shaken', u.moved && (u.advanced ? 'Advanced' : u.fellBack ? 'Fell back' : 'Moved'), u.shot && 'Shot', u.chargedNow && 'Charged', engaged(u) && 'In combat'].filter(Boolean);
-    return `<div class="card"><div class="card-h"><b style="color:${ARMIES[G.players[u.side].army].col}">${D.ic} ${D.n}</b><span>${u.models.length}/${u.startN} models · ${D.role}</span></div>
-      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? D.M + '"' : k === 'Sv' || k === 'Ld' ? D[k] + '+' : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
-      ${wl}${D.rule ? `<div class="rule"><b>${D.rule.n}:</b> ${D.rule.txt}</div>` : ''}${flags.length ? `<div class="flags">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}</div>`;
+    return `<div class="card"><div class="card-h"><b style="color:${ARMIES[G.players[u.side].army].col}">${D.ic} ${D.n}</b><span>${u.models.length}/${u.startN} models · ${u.lead ? 'Led unit' : D.role}</span></div>
+      <div class="stats">${['M', 'T', 'Sv', 'W', 'Ld', 'OC'].map(k => `<div><i>${k}</i><b>${k === 'M' ? unitM(u) + '"' : k === 'Sv' ? saveNeed(u, 0, false) + '+' : k === 'Ld' ? unitLd(u) + '+' : k === 'OC' ? modelOC(u, u.models.find(m => !m.ldr) || u.models[0]) : D[k]}</b></div>`).join('')}${D.ward ? `<div><i>Ward</i><b>${D.ward}+</b></div>` : ''}</div>
+      ${wl}${D.rule ? `<div class="rule"><b>${D.rule.n}:</b> ${D.rule.txt}</div>` : ''}${(() => { if (!u.lead) return ''; const L = UNITS[u.lead]; return `<div class="rule ldr-line"><b>${L.ic} Led by ${L.n}</b> (W${L.W}, Sv${L.Sv}+${L.ward ? `, ward ${L.ward}+` : ''}, takes wounds last)${L.rule ? `<br><b>${L.rule.n}:</b> ${L.rule.txt}` : ''}<br><b>${L.lead.n}:</b> ${L.lead.txt}</div>`; })()}${(() => { const x = subOf(u.side); return x ? `<div class="rule sub-line"><b>${x.rn}</b> (${x.n}): ${x.txt}</div>` : ''; })()}${flags.length ? `<div class="flags">${flags.map(f => `<span>${f}</span>`).join('')}</div>` : ''}</div>`;
   },
   panelHtml(s, u, vu) {
     const ui = this.ui, B = (a, t, cls = '') => `<button class="b ${cls}" data-act="${a}">${t}</button>`;
     if (G.over) return `<div class="msg">The battle is over.</div>`;
     if (ui.mode === 'pick') return `<div class="msg">${ui.msg}</div>`;
-    if (s === null) return `<div class="msg">${pname(G.turn)} is ${{ move: 'moving', shoot: 'shooting', charge: 'charging', fight: 'fighting', command: 'giving orders' }[G.phase] || 'thinking'}…</div>${this.unitCard(vu)}`;
+    if (s === null) return `<div class="msg">${pverb(G.turn, 'is', 'are')} ${{ move: 'moving', shoot: 'shooting', charge: 'charging', fight: 'fighting', command: 'giving orders' }[G.phase] || 'thinking'}…</div>${this.unitCard(vu)}`;
     if (G.phase === 'fight' || G.phase === 'command') return `<div class="msg">${G.phase === 'fight' ? 'Combat is being resolved…' : 'Command phase'}</div>${this.unitCard(vu)}`;
     let act = '', hint = '';
     const phaseHint = { move: 'Tap one of your units, then choose how it moves.', shoot: 'Tap a unit that can shoot, then tap Shoot and pick a target.', charge: 'Tap a unit within 12" of the enemy to charge.' }[G.phase];
@@ -773,7 +1082,7 @@ const Battle = {
       else if (G.phase === 'move') {
         if (u.mvDone) hint = `${UD(u).n} has finished moving.`;
         else if (engaged(u)) act = B('fallback', '↩ Fall back') + B('hold', 'Stay in combat');
-        else act = B('move', `➜ Move ${UD(u).M}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
+        else act = B('move', `➜ Move ${unitM(u)}"`, 'gold') + B('advance', '⇶ Advance') + B('hold', 'Hold');
       } else if (G.phase === 'shoot') { if (canShoot(u)) { act = B('shoot', '🎯 Shoot', 'gold'); hint = `Best target: ${(() => { const t = AI.pickShot(u); return t ? UD(t).n + ` (about ${expected(u, t, false).toFixed(1)} damage)` : 'none'; })()}`; } else hint = u.shot ? 'Already fired this turn.' : u.advanced ? 'Advanced units can only fire assault weapons.' : engaged(u) ? 'Locked in combat.' : 'No targets in range and sight.'; }
       else if (G.phase === 'charge') { if (canCharge(u)) act = B('charge', '⚔ Charge', 'gold'); else hint = u.charged ? 'Already charged.' : u.advanced || u.fellBack ? "Can't charge after advancing or falling back." : engaged(u) ? 'Already in combat.' : 'No enemy within 12".'; }
     } else hint = phaseHint;
@@ -792,6 +1101,7 @@ const saveSettings = () => { Store.set('settings', Settings); Sfx.apply(); };
 const FORM_ID = '1FAIpQLSe__mPhU5YGi9um01BreqNND9mJwaaChi_4ZCp-7P5JcCJKcw';
 const FORM_FIELDS = { rating: 'entry.1904387170', liked: 'entry.2084220988', change: 'entry.1413261780', name: 'entry.1767709403', version: 'entry.1994593489' };
 const CHANGES = [
+  ['0.2.0', '20 Nov 2026', 'Muster', ['Muster: build and save your own army lists from the main menu', 'Squad sizes and free wargear swaps (sun rifles, storm hammers, lance cannons, spike launchers and more)', 'Leaders can join a squad: they share its fight, take wounds last and give it a bonus', 'Two new leaders: the Oathkeeper and the Wrenchwright', 'Three sub-factions per army, each with its own army rule', 'Choose 500-point Skirmish or 750-point Clash battles; the AI fields a random force', 'The Rustborn Mob is now Toughness 4 and its hackers are AP0, and attached Scrapkings let their mob re-roll charges, after balance testing']],
   ['0.1.0', '20 Nov 2026', 'First blood', ['The first playable battle: the Ironclad Covenant against the Rust Tide at 500 points', 'Hands-on dice: roll, sweep away misses, tap to re-roll', 'Hold the objectives over five battle rounds, against the AI or a friend', 'Movement, shooting, charges, fights, battle-shock and command re-rolls']]
 ];
 
@@ -830,18 +1140,33 @@ const Shell = {
       <h1>Iron Dominion</h1><p class="tag">A grim war for the last worlds. Hold the line.</p>
       ${save ? `<button class="tile big" onclick="Shell.resume()"><span>▶</span>Continue battle<small>Round ${save.round} · ${save.players[0].name} vs ${save.players[1].name}</small></button>` : ''}
       <button class="tile ${save ? '' : 'big'}" onclick="Shell.play()"><span>⚔</span>${save ? 'New battle' : 'Play'}</button>
-      <div class="row"><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
+      <div class="row3"><button class="tile" onclick="Muster.home()"><span>⚑</span>Muster</button><button class="tile" onclick="Shell.settings()"><span>⚙</span>Settings</button><button class="tile" onclick="Shell.more()"><span>☰</span>More</button></div>
       <button class="tile" data-install><span>⬇</span>Install</button>
-      <div class="ver">v${GAME_VERSION} · Stage 1: First blood</div></div>`);
+      <div class="ver">v${GAME_VERSION} · Stage 2: Muster</div></div>`);
   },
-  async play() {
-    const mode = await choose('New battle', 'A 500-point skirmish. Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
+  async play(fromList) {
+    const mode = await choose('New battle', fromList ? `Taking <b>${esc(fromList.name)}</b> to war. Hold the objectives over five battle rounds.` : 'Hold the objectives over five battle rounds.', [{ l: '🤖 vs AI', v: 'ai', p: 1 }, { l: '👥 Pass & Play', v: 'pp' }, { l: 'Back', v: null }]);
     if (!mode) return;
-    const army = await choose(mode === 'pp' ? 'Player 1: choose your army' : 'Choose your army', Object.entries(ARMIES).map(([k, a]) => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
+    const pts = fromList ? fromList.pts : await choose('Battle size', POINTS.map(p => `<b>${p.pts} pts · ${p.n}</b>: about ${p.pts === 500 ? '5 or 6' : '7 to 9'} units a side.`).join('<br>'), POINTS.map((p, i) => ({ l: `${p.pts} pts · ${p.n}`, v: p.pts, p: !i })).concat([{ l: 'Back', v: null }]));
+    if (!pts) return;
+    const army = fromList ? fromList.army : await choose(mode === 'pp' ? 'Player 1: choose your army' : 'Choose your army', Object.entries(ARMIES).map(([k, a]) => `<b style="color:${a.col}">${a.n}</b>: ${a.blurb}`).join('<br><br>'), Object.entries(ARMIES).map(([k, a]) => ({ l: a.short, v: k })).concat([{ l: 'Back', v: null }]));
     if (!army) return;
+    const l1 = fromList ? JSON.parse(JSON.stringify(fromList)) : await this.pickList(army, pts, mode === 'pp' ? 'Player 1' : 'Your');
+    if (!l1) return;
     const other = Object.keys(ARMIES).find(k => k !== army);
-    const players = mode === 'ai' ? [{ name: 'You', army, type: 'human' }, { name: 'The AI', army: other, type: 'ai' }] : [{ name: 'Player 1', army, type: 'human' }, { name: 'Player 2', army: other, type: 'human' }];
-    this.startBattle({ players, diff: Settings.diff });
+    const l2 = mode === 'ai' ? randomList(other, pts) : await this.pickList(other, pts, 'Player 2');
+    if (!l2) return;
+    const players = mode === 'ai' ? [{ name: 'You', army, type: 'human', list: l1 }, { name: 'The AI', army: other, type: 'ai', list: l2 }] : [{ name: 'Player 1', army, type: 'human', list: l1 }, { name: 'Player 2', army: other, type: 'human', list: l2 }];
+    this.startBattle({ players, diff: Settings.diff, pts });
+  },
+  async pickList(army, pts, who) {
+    const mine = Muster.all().filter(L => L.army === army && L.pts === pts && !listProblems(L).length), opts = [];
+    if (pts === 500) opts.push({ l: 'Starter force', v: 'starter', p: 1 });
+    mine.forEach(L => opts.push({ l: `${esc(L.name)}<small>${SUBS[army][L.sub].n} · ${listPts(L)} pts</small>`, v: L.id }));
+    opts.push({ l: '🎲 Random force', v: 'random', p: !opts.length }, { l: 'Back', v: null });
+    const v = await choose(`${who} army list`, `<b style="color:${ARMIES[army].col}">${ARMIES[army].n}</b> at ${pts} points.${mine.length ? '' : ' Build and save your own lists in Muster on the main menu.'}`, opts);
+    if (!v) return null;
+    return v === 'starter' ? starterList(army) : v === 'random' ? randomList(army, pts) : JSON.parse(JSON.stringify(Muster.get(v)));
   },
   startBattle(cfg) { Store.del('save'); this.battleScreen(); Battle.start(cfg); },
   battleScreen() {
@@ -891,6 +1216,9 @@ const Shell = {
       <li><b>Fight:</b> every unit in combat fights, chargers first.</li></ol>
       <p><b>The dice:</b> roll to hit (the weapon's skill or better), sweep away the misses, roll to wound (Strength against Toughness), then the defender rolls saves (worsened by AP). Each unsaved wound deals the weapon's Damage. Re-rolls show up as buttons: tap them, or spend 1 CP on a command re-roll and tap the die you want again.</p>
       <p><b>Objectives:</b> a marker belongs to the side with the most Objective Control (OC) within 3". From round 2, at the end of your turn you score 5 VP for holding one, 5 more for holding two or more, and 5 more for holding more than the enemy.</p>
+      <p><b>Muster:</b> build your own armies from the main menu. Spend points on units, pick squad sizes and swap wargear for free. Every list needs a Leader.</p>
+      <p><b>Leaders</b> can join a squad (gold-ringed on the field). The squad keeps its own stats, the leader takes wounds last, and the squad gets the leader's bonus. If the squad dies, the leader fights on alone.</p>
+      <p><b>Sub-factions:</b> each army picks one, and its rule covers the whole army. Tap any unit to see your army's rule on its card.</p>
       <p><b>Tap any model</b> to see its unit's datasheet. Prefer the dice rolled for you? Choose Quick dice in Settings.</p></div>`);
   },
   news() { sheet(`<h2>What's new</h2>${CHANGES.map(([v, d, t, items]) => `<h3>${v} · ${t} <small>${d}</small></h3><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul>`).join('')}`); },
@@ -987,7 +1315,7 @@ html:not(.kg-can-install) [data-install]{display:none!important}
 // Kralnu Games update check. When you push an update, change the game's version
 // AND version.json to the same new value; players then get a "new version" notice.
 (function(){
-  var NAME="Iron Dominion",BUILD="0.1.0",CACHES=["idom-"],CHECK=true;
+  var NAME="Iron Dominion",BUILD="0.2.0",CACHES=["idom-"],CHECK=true;
   var path=location.pathname,dir=path.replace(/[^/]*$/,''),last=0,bar=null,busy=false;
   if(/^\?v=\d+$/.test(location.search)){try{history.replaceState(history.state,'',path+location.hash)}catch(e){}}
   function build(){return String(window.kgBuild!=null?window.kgBuild:BUILD)}

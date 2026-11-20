@@ -7,7 +7,7 @@ const WP = id => WEAPONS[id];
 const UD = u => UNITS[u.def];
 const d6 = () => 1 + Math.floor(Math.random() * 6);
 const rollExpr = e => typeof e === 'number' ? e : e === 'D3' ? Math.ceil(d6() / 2) : e === 'D6+1' ? d6() + 1 : e === '2D6' ? d6() + d6() : d6();
-const avgExpr = e => typeof e === 'number' ? e : e === 'D3' ? 2 : e === 'D6+1' ? 4.5 : 3.5;
+const avgExpr = e => typeof e === 'number' ? e : e === 'D3' ? 2 : e === 'D6+1' ? 4.5 : e === '2D6' ? 7 : 3.5;
 const key = (c, r) => c + ',' + r;
 const inBoard = (c, r) => c >= 0 && r >= 0 && c < COLS && r < ROWS;
 const enemyOf = s => 1 - s;
@@ -17,23 +17,47 @@ const cheb = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const sqd = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 let NEXT_ID = 1;
 const nd = n => n === 1 ? '1 die' : n + ' dice';
+const MW = m => UNITS[m.p].W;
+const unitM = u => Math.min(...u.models.map(m => UNITS[m.p].M));
+const unitLd = u => Math.min(...u.models.map(m => UNITS[m.p].Ld));
+const hasRule = (u, id) => u.models.some(m => UNITS[m.p].rule && UNITS[m.p].rule.id === id);
+const leadIs = (u, id) => !!(u.lead && UNITS[u.lead].lead && UNITS[u.lead].lead.id === id);
+const subOf = s => { const p = G.players[s], L = p.list; return L && SUBS[p.army] && SUBS[p.army][L.sub] || null; };
+const subIs = (s, id) => { const x = subOf(s); return !!(x && x.id === id); };
+const modelOC = (u, m) => UNITS[m.p].OC + (leadIs(u, 'ocBoost') ? 1 : 0);
+const unitOC = u => u.models.reduce((a, m) => a + modelOC(u, m), 0);
 
 /* ---------- building armies ---------- */
-function makeUnit(def, side) {
-  const D = UNITS[def], models = [];
-  D.models.forEach(([n, guns, melee], gi) => { for (let k = 0; k < n; k++) models.push({ id: NEXT_ID++, x: -1, y: -1, w: D.W, guns: guns.slice(), melee: melee.slice(), spec: gi > 0 }); });
-  return { uid: NEXT_ID++, def, side, models, startN: models.length, moved: false, advanced: false, fellBack: false, shot: false, charged: false, fought: false, shaken: false, oath: false };
+function makeUnit(e, side, leaders = []) {
+  if (typeof e === 'string') e = { d: e, s: 0, o: {} };
+  const D = UNITS[e.d], models = [];
+  const add = (le, isLdr) => buildModels(le).forEach(([n, guns, melee], gi) => { for (let k = 0; k < n; k++) models.push({ id: NEXT_ID++, x: -1, y: -1, p: le.d, w: UNITS[le.d].W, guns: guns.slice(), melee: melee.slice(), spec: isLdr || gi > 0, ldr: isLdr }); });
+  add(e, false); let pts = entryPts(e), lead = null;
+  for (const le of leaders) { add(le, true); lead = le.d; pts += entryPts(le); }
+  return { uid: NEXT_ID++, def: e.d, lead, side, models, startN: models.length, pts, wStart: models.reduce((a, m) => a + m.w, 0), moved: false, advanced: false, fellBack: false, shot: false, charged: false, fought: false, shaken: false, oath: false };
 }
 function newBattle(cfg) {
-  NEXT_ID = 1;
+  NEXT_ID = 1; cfg.pts = cfg.pts || 500;
   G = { cfg, round: 1, turn: 0, phase: 'command', cp: [0, 0], vp: [0, 0], players: cfg.players, units: [], log: [], over: null, first: 0, cmdUsed: [false, false], score: [[], []] };
-  cfg.players.forEach((p, s) => ARMIES[p.army].list.forEach(def => G.units.push(makeUnit(def, s))));
+  cfg.players.forEach((p, s) => {
+    const L = p.list = p.list || starterList(p.army);
+    const ks = new Set(L.units.map(e => e.k)), leaders = L.units.filter(e => e.at && ks.has(e.at));
+    L.units.forEach(e => { if (!leaders.includes(e)) G.units.push(makeUnit(e, s, leaders.filter(l => l.at === e.k))); });
+  });
+  cfg.players.forEach((p, s) => { const x = subOf(s); log(`${p.name}: ${p.list.name}, ${x ? x.n : ARMIES[p.army].short} (${listPts(p.list)} pts).`); });
   deploy(0); deploy(1);
   G.first = G.turn = Math.random() < .5 ? 0 : 1;
-  log(`${pname(G.first)} wins the roll-off and takes the first turn.`);
+  log(`${pverb(G.first, 'wins', 'win')} the roll-off and takes the first turn.`);
   return G;
 }
+/* saves from v0.1 had no per-model profiles */
+function migrate(state) {
+  for (const u of state.units) { for (const m of u.models) if (!m.p) m.p = u.def; if (u.pts == null) { u.pts = UNITS[u.def].pts; u.wStart = u.startN * UNITS[u.def].W; } }
+  if (!state.cfg.pts) state.cfg.pts = 500;
+  return state;
+}
 const pname = s => G.players[s].name;
+const pverb = (s, one, you) => `${pname(s)} ${pname(s) === 'You' ? you : one}`;
 function log(t) { G.log.push(t); if (G.log.length > 60) G.log.shift(); }
 
 /* ---------- the grid ---------- */
@@ -59,10 +83,19 @@ function formation(u, anchor, ok) {
   return true;
 }
 function deploy(side) {
-  const us = G.units.filter(u => u.side === side), slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2]];
+  const depth = (POINTS.find(p => p.pts === G.cfg.pts) || POINTS[0]).depth;
+  const zone = d => (x, y) => side === 1 ? y <= d - 1 : y >= ROWS - d;
+  const us = G.units.filter(u => u.side === side);
+  const slots = [[7, 1], [3, 1], [11, 1], [5, 3], [9, 3], [1, 3], [13, 3], [7, 2], [3, 3], [11, 3]];
+  const all = []; for (let r = 0; r < depth + 1; r++) for (let c = 0; c < COLS; c++) all.push([c, r]);
+  all.sort((a, b) => Math.abs(a[0] - 7) - Math.abs(b[0] - 7) + (b[1] - a[1]) * .3);
   us.forEach((u, i) => {
-    let [c, r] = slots[i % slots.length]; if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; }
-    formation(u, { x: c, y: r }, (x, y) => side === 1 ? y <= 3 : y >= ROWS - 4);
+    const cands = [slots[i % slots.length]].concat(all);
+    let ok = false;
+    for (const d of [depth, depth + 1, depth + 2]) {
+      for (let [c, r] of cands) { if (side === 0) { c = COLS - 1 - c; r = ROWS - 1 - r; } if (formation(u, { x: c, y: r }, zone(d))) { ok = true; break; } }
+      if (ok) break;
+    }
   });
 }
 function engagedWith(u) { const out = new Set(); for (const v of liveUnits()) if (v.side !== u.side) for (const a of u.models) for (const b of v.models) if (cheb(a, b) <= 1) out.add(v); return [...out]; }
@@ -89,7 +122,7 @@ const stationary = u => !u.moved;
 function objControl() {
   return OBJECTIVES.map(([c, r]) => {
     const oc = [0, 0];
-    for (const u of liveUnits()) { if (u.shaken) continue; for (const m of u.models) if (Math.hypot(m.x - c, m.y - r) <= 1.6) oc[u.side] += UD(u).OC; }
+    for (const u of liveUnits()) { if (u.shaken) continue; for (const m of u.models) if (Math.hypot(m.x - c, m.y - r) <= 1.6) oc[u.side] += modelOC(u, m); }
     return oc[0] > oc[1] ? 0 : oc[1] > oc[0] ? 1 : -1;
   });
 }
@@ -103,7 +136,21 @@ function scoreTurn(side) {
 
 /* ---------- attack maths ---------- */
 function woundNeed(S, T) { return S >= 2 * T ? 2 : S > T ? 3 : S === T ? 4 : S * 2 <= T ? 6 : 5; }
-function saveNeed(def, AP, cover) { const D = UD(def); let sv = D.Sv - AP - (cover ? 1 : 0); sv = Math.max(2, sv); if (D.ward && D.ward < sv) sv = D.ward; return sv; }
+function saveNeed(def, AP, cover) {
+  const D = UD(def); if (AP < 0 && subIs(def.side, 'bulwark')) AP++;
+  let sv = Math.max(2, D.Sv - AP - (cover ? 1 : 0)); if (leadIs(def, 'saveUp') && sv > 3) sv--;
+  if (D.ward && D.ward < sv) sv = D.ward; return sv;
+}
+/* everything that tweaks one weapon's attack: Strength, wound roll, AP and the hit roll */
+function atkMods(att, def, w, melee, g) {
+  const rust = melee && att.chargedNow && G.players[att.side].army === 'rust';
+  const S = w.S + (rust ? 1 : 0) + (melee && leadIs(att, 'meleeStr') ? 1 : 0);
+  const wn = Math.max(2, woundNeed(S, UD(def).T) - (melee && leadIs(att, 'meleeWound') ? 1 : 0));
+  const AP = w.AP - (melee && subIs(att.side, 'fervour') ? 1 : 0);
+  const heavy = !melee && w.kw.heavy && stationary(att), haze = !melee && g && g.far && subIs(def.side, 'haze');
+  const need = Math.min(6, Math.max(2, w.sk - (heavy ? 1 : 0) - (leadIs(att, 'hitPlus') ? 1 : 0)) + (haze ? 1 : 0));
+  return { S, wn, AP, need, heavy, haze };
+}
 /* the weapons a unit can bring to bear on a target: [{wid, attacks, half}] */
 function shootingGroups(att, def) {
   const groups = {}, moved = att.advanced;
@@ -112,72 +159,79 @@ function shootingGroups(att, def) {
     let best = 1e9, seen = false;
     for (const t of def.models) { const d = sqd(m, t) * SQ; if (d <= w.r && los(m, t)) { seen = true; best = Math.min(best, d); } }
     if (!seen) continue;
-    const g = groups[wid] = groups[wid] || { wid, models: 0, half: true };
-    g.models++; if (best > w.r / 2) g.half = false;
+    const g = groups[wid] = groups[wid] || { wid, models: 0, half: true, far: true };
+    g.models++; if (best > w.r / 2) g.half = false; if (best <= 18) g.far = false;
   }
   return Object.values(groups);
 }
-function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true }; g[wid].models++; } return Object.values(g); }
+function meleeGroups(att) { const g = {}; for (const m of att.models) for (const wid of m.melee) { g[wid] = g[wid] || { wid, models: 0, half: true, far: false }; g[wid].models++; } return Object.values(g); }
 function canShoot(u) { if (!u.models.length || u.shot || u.fellBack || engaged(u)) return false; return shootTargets(u).length > 0; }
 function shootTargets(u) { return liveUnits().filter(v => v.side !== u.side && shootingGroups(u, v).length && !engaged(v)); }
 function chargeTargets(u) { return liveUnits().filter(v => v.side !== u.side && unitDistIn(u, v) <= 12); }
 function canCharge(u) { return u.models.length && !u.advanced && !u.fellBack && !u.charged && !engaged(u) && chargeTargets(u).length; }
-function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (UD(v).rule && UD(v).rule.id === 'chargeAura' && v !== u && unitDistIn(u, v) <= 6) b = 1; if (UD(u).rule && UD(u).rule.id === 'chargeAura') b = 1; return b; }
+function chargeBonus(u) { let b = 0; for (const v of unitsOf(u.side)) if (hasRule(v, 'chargeAura') && (v === u || unitDistIn(u, v) <= 6)) b = 1; if (subIs(u.side, 'stampede') || subIs(u.side, 'fervour')) b++; return Math.min(2, b); }
 const chargeNeed = (u, v) => Math.max(2, Math.ceil(unitDistIn(u, v) - SQ));
-function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (UD(v).rule && UD(v).rule.id === 'rerollOnes' && unitDistIn(u, v) <= 6) return true; return false; }
+function hitRerollOnes(u) { for (const v of unitsOf(u.side)) if (hasRule(v, 'rerollOnes') && (v === u || unitDistIn(u, v) <= 6)) return true; return false; }
 /* expected damage (for the AI and the hint line) */
 function expected(att, def, melee) {
   const groups = melee ? meleeGroups(att) : shootingGroups(att, def); let dmg = 0;
-  const T = UD(def).T, cover = !melee && inCover(def, att), Wt = UD(def).W;
+  const cover = !melee && inCover(def, att), Wt = UD(def).W;
   for (const g of groups) {
-    const w = WP(g.wid); let A = avgExpr(w.A) * g.models; if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
-    const S = w.S + (melee && att.chargedNow && att.side !== undefined && G.players[att.side].army === 'rust' ? 1 : 0);
-    const pH = w.kw.torrent ? 1 : Math.min(5 / 6, Math.max(1 / 6, (7 - Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0))) / 6));
-    let pW = (7 - woundNeed(S, T)) / 6; if (w.kw.twin) pW = 1 - (1 - pW) * (1 - pW);
-    const sv = saveNeed(def, w.AP, cover), pF = sv >= 7 ? 1 : (sv - 1) / 6;
+    const w = WP(g.wid), M = atkMods(att, def, w, melee, g); let A = avgExpr(w.A) * g.models; if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
+    const pH = w.kw.torrent ? 1 : (7 - M.need) / 6;
+    let pW = (7 - M.wn) / 6; if (w.kw.twin) pW = 1 - (1 - pW) * (1 - pW);
+    const sv = saveNeed(def, M.AP, cover), pF = sv >= 7 ? 1 : (sv - 1) / 6;
     let D = avgExpr(w.D) + (w.kw.melta && g.half ? w.kw.melta : 0); D = Math.min(D, Wt);
     dmg += A * pH * pW * pF * D;
   }
+  if (subIs(def.side, 'bodge')) dmg *= 5 / 6;
   return dmg;
 }
 
 /* ---------- resolving an attack (dice go through the Tray) ---------- */
 async function resolveAttack(att, def, melee) {
   const groups = melee ? meleeGroups(att) : shootingGroups(att, def), cover = !melee && inCover(def, att);
-  const T = UD(def).T, rustFury = melee && att.chargedNow && G.players[att.side].army === 'rust';
   let killed = 0;
   for (const g of groups) {
     if (!def.models.length) break;
     const w = WP(g.wid);
     let A = 0; for (let k = 0; k < g.models; k++) A += rollExpr(w.A); if (w.kw.rapid && g.half) A += w.kw.rapid * g.models;
-    const S = w.S + (rustFury ? 1 : 0), head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
+    const M = atkMods(att, def, w, melee, g), S = M.S, T = UD(def).T, head = `${UD(att).n} → ${UD(def).n}: ${g.models > 1 ? g.models + '× ' : ''}${w.n}`;
     // hit
     let hits;
     if (w.kw.torrent) { hits = A; await Tray.note(head, `${A} automatic hit${A === 1 ? '' : 's'} (torrent).`); }
     else {
-      const need = Math.max(2, w.sk - (w.kw.heavy && stationary(att) ? 1 : 0));
-      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${w.kw.heavy && stationary(att) ? ' (heavy, stood still)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
+      const need = M.need;
+      const dice = await Tray.step({ kind: 'hit', title: head, label: `Roll to hit: ${nd(A)}, ${need}+ to hit${M.heavy ? ' (heavy, stood still)' : ''}${M.haze ? ' (−1: choking smog)' : ''}`, n: A, need, side: att.side, rrOnes: hitRerollOnes(att) || (!melee && subIs(att.side, 'prey')), oath: G.players[att.side].army === 'covenant' && !att.oath ? att : null });
       hits = dice.filter(v => v >= need).length;
     }
     if (!hits) { log(`${head}: no hits.`); continue; }
     // wound
-    const wn = woundNeed(S, T);
-    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin });
+    const wn = M.wn, prey = !melee && subIs(att.side, 'prey');
+    const wd = await Tray.step({ kind: 'wound', title: head, label: `Roll to wound: ${nd(hits)}, S${S} vs T${T} needs ${wn}+${w.kw.twin ? ' (twin: re-roll fails)' : prey ? ' (marked prey: re-roll 1s)' : ''}`, n: hits, need: wn, side: att.side, rrFails: !!w.kw.twin, rrOnes: prey });
     const wounds = wd.filter(v => v >= wn).length;
     if (!wounds) { log(`${head}: ${hits} hit${hits > 1 ? 's' : ''}, no wounds.`); continue; }
     // save (the defender rolls)
-    const sv = saveNeed(def, w.AP, cover);
+    const sv = saveNeed(def, M.AP, cover);
     let fails = wounds;
     if (sv <= 6) {
       const sd = await Tray.step({ kind: 'save', title: `${UD(def).n} save`, label: `Roll saves: ${nd(wounds)}, ${sv}+ to save${cover ? ' (in cover)' : ''}${UD(def).ward && UD(def).ward === sv ? ' (ward)' : ''}`, n: wounds, need: sv, side: def.side });
       fails = sd.filter(v => v < sv).length;
-    } else await Tray.note(`${UD(def).n} save`, `No save possible against AP${w.AP}.`);
+    } else await Tray.note(`${UD(def).n} save`, `No save possible against AP${M.AP}.`);
     if (!fails) { log(`${head}: ${wounds} wound${wounds > 1 ? 's' : ''}, all saved.`); continue; }
     // damage
     let dmgs = [];
     if (typeof w.D === 'number') dmgs = Array(fails).fill(w.D);
     else { const dd = await Tray.step({ kind: 'damage', title: head, label: `Roll damage: ${fails} × ${w.D}`, n: fails, need: 0, side: att.side, plain: true }); dmgs = dd.map(v => w.D === 'D3' ? Math.ceil(v / 2) : w.D === 'D6+1' ? v + 1 : v); }
     if (w.kw.melta && g.half) dmgs = dmgs.map(d => d + w.kw.melta);
+    if (subIs(def.side, 'bodge')) {
+      dmgs = dmgs.map(d => Math.min(d, UD(def).W)); const tot = dmgs.reduce((a, b) => a + b, 0);
+      const fd = await Tray.step({ kind: 'fnp', title: `${UD(def).n}: Bodge Job`, label: `Roll for each lost wound: ${nd(tot)}, a 6 ignores it`, n: tot, need: 6, side: def.side });
+      let saved = fd.filter(v => v >= 6).length;
+      for (let i = 0; i < dmgs.length && saved; i++) { const t = Math.min(saved, dmgs[i]); dmgs[i] -= t; saved -= t; }
+      dmgs = dmgs.filter(d => d > 0);
+      if (!dmgs.length) { log(`${head}: every wound shrugged off.`); await Tray.result(`${UD(def).n} bodges it back together: no models lost.`, def); continue; }
+    }
     const before = def.models.length;
     for (const d of dmgs) { if (!def.models.length) break; allocate(def, d); }
     killed += before - def.models.length;
@@ -189,9 +243,14 @@ async function resolveAttack(att, def, melee) {
   return killed;
 }
 function allocate(def, dmg) {
-  // wounded models take damage first, then plain models, specialists last
-  let m = def.models.find(x => x.w < UD(def).W) || def.models.filter(x => !x.spec).slice(-1)[0] || def.models[def.models.length - 1];
-  m.w -= dmg; if (m.w <= 0) def.models.splice(def.models.indexOf(m), 1);
+  // wounded models take damage first, then plain models, specialists, and an attached leader last
+  const ms = def.models, body = ms.filter(x => !x.ldr);
+  const m = body.find(x => x.w < MW(x)) || body.filter(x => !x.spec).slice(-1)[0] || body.slice(-1)[0] || ms.find(x => x.w < MW(x)) || ms[ms.length - 1];
+  m.w -= dmg; if (m.w <= 0) ms.splice(ms.indexOf(m), 1);
+  if (ms.length && !ms.some(x => !x.ldr)) { // the bodyguard is gone: the leader fights on alone
+    log(`${UD(def).n} falls. ${UNITS[def.lead].n} fights on alone.`);
+    def.def = def.lead; def.lead = null; def.startN = ms.length; ms.forEach(x => { x.ldr = false; x.spec = false; });
+  }
 }
 function checkWipe() {
   if (G.over) return;
@@ -201,7 +260,7 @@ function checkWipe() {
 
 /* ---------- moving ---------- */
 function reachable(u, mode, adv = 0) {
-  const a = u.models[0], range = (UD(u).M + adv) / SQ, occ = occMap(), out = new Set();
+  const a = u.models[0], range = (unitM(u) + adv) / SQ, occ = occMap(), out = new Set();
   for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
     if (Math.hypot(c - a.x, r - a.y) > range + .01) continue;
     const h = occ[key(c, r)]; if (h && h.u !== u) continue;
@@ -236,7 +295,7 @@ const AI = {
   isMelee(u) { const fake = { models: [{ x: 0, y: 0 }] }; let m = 0, r = 0; for (const g of meleeGroups(u)) { const w = WP(g.wid); m += avgExpr(w.A) * g.models * w.S * avgExpr(w.D); } for (const md of u.models) for (const wid of md.guns) { const w = WP(wid); r += avgExpr(w.A) * w.S * avgExpr(w.D) * (w.kw.torrent ? 1.5 : 1); } return m > r * 1.3; },
   maxRange(u) { let r = 0; for (const m of u.models) for (const wid of m.guns) r = Math.max(r, WP(wid).r); return r; },
   cellScore(u, c, r, side) {
-    const ctl = objControl(), melee = AI.isMelee(u), oc = UD(u).OC * u.models.length;
+    const ctl = objControl(), melee = AI.isMelee(u), oc = unitOC(u);
     let s = 0;
     OBJECTIVES.forEach(([oc0, or0], i) => {
       const d = Math.hypot(c - oc0, r - or0);
@@ -258,9 +317,8 @@ const AI = {
   pickShot(u) {
     let best = null;
     for (const v of shootTargets(u)) {
-      let s = expected(u, v, false); const left = v.models.reduce((a, m) => a + m.w, 0);
-      s *= UD(v).pts / (UD(v).W * v.startN);
-      if (s * 1.2 >= left * UD(v).pts / (UD(v).W * v.startN)) s += 3;
+      let s = expected(u, v, false); const left = v.models.reduce((a, m) => a + m.w, 0), val = v.pts / v.wStart;
+      s *= val; if (s * 1.2 >= left * val) s += 3;
       if (objControl().some((x, i) => x !== u.side && v.models.some(m => Math.hypot(m.x - OBJECTIVES[i][0], m.y - OBJECTIVES[i][1]) <= 1.6))) s *= 1.4;
       s += AI.noise() * .3;
       if (!best || s > best.s) best = { v, s };
@@ -271,7 +329,7 @@ const AI = {
   pickCharge(u) {
     let best = null;
     for (const v of chargeTargets(u)) {
-      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), UD(u).rule && UD(u).rule.id === 'rerollCharge');
+      const p = AI.chargeOdds(chargeNeed(u, v), chargeBonus(u), hasRule(u, 'rerollCharge') || leadIs(u, 'chargeRR'));
       const gain = expected(u, v, true) - expected(v, u, true) * .5;
       const s = p * gain + (AI.isMelee(u) ? 1.5 : -1) + AI.noise() * .2;
       if (p > .25 && (!best || s > best.s)) best = { v, s };

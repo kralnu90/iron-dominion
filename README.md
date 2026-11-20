@@ -18,7 +18,7 @@ Command squads of models on a gridded battlefield, roll the dice yourself, and h
 
 ## Coming next
 
-- **Stage 2, Muster:** army builder with points, unit sizes and wargear swaps; sub-factions; leaders joining squads
+- **Stage 2, Muster (v0.2.0, done):** army builder with points, unit sizes and wargear swaps; sub-factions; leaders joining squads; saved lists
 - **Stage 3, The full war:** two more armies, full rosters, Gambits, secondary missions, deployment maps, 1,000 and 2,000 point games
 - **Stage 4, Polish:** mission pack, campaign, balance passes
 
